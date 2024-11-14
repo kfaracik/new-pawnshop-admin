@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { withSwal } from "react-sweetalert2";
+import { v4 as uuidv4 } from "uuid"; // import uuid for unique keys
 
 function Categories({ swal }) {
   const [editedCategory, setEditedCategory] = useState(null);
@@ -9,14 +10,17 @@ function Categories({ swal }) {
   const [parentCategory, setParentCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [properties, setProperties] = useState([]);
+
   useEffect(() => {
     fetchCategories();
   }, []);
+
   function fetchCategories() {
     axios.get("/api/categories").then((result) => {
       setCategories(result.data);
     });
   }
+
   async function saveCategory(ev) {
     ev.preventDefault();
     const data = {
@@ -39,17 +43,20 @@ function Categories({ swal }) {
     setProperties([]);
     fetchCategories();
   }
+
   function editCategory(category) {
     setEditedCategory(category);
     setName(category.name);
     setParentCategory(category.parent?._id);
     setProperties(
       category.properties.map(({ name, values }) => ({
+        id: uuidv4(), // Add a unique ID
         name,
         values: values.join(","),
       }))
     );
   }
+
   function deleteCategory(category) {
     swal
       .fire({
@@ -69,11 +76,11 @@ function Categories({ swal }) {
         }
       });
   }
+
   function addProperty() {
-    setProperties((prev) => {
-      return [...prev, { name: "", values: "" }];
-    });
+    setProperties((prev) => [...prev, { id: uuidv4(), name: "", values: "" }]);
   }
+
   function handlePropertyNameChange(index, property, newName) {
     setProperties((prev) => {
       const properties = [...prev];
@@ -81,6 +88,7 @@ function Categories({ swal }) {
       return properties;
     });
   }
+
   function handlePropertyValuesChange(index, property, newValues) {
     setProperties((prev) => {
       const properties = [...prev];
@@ -88,13 +96,13 @@ function Categories({ swal }) {
       return properties;
     });
   }
+
   function removeProperty(indexToRemove) {
-    setProperties((prev) => {
-      return [...prev].filter((p, pIndex) => {
-        return pIndex !== indexToRemove;
-      });
-    });
+    setProperties((prev) =>
+      [...prev].filter((_, pIndex) => pIndex !== indexToRemove)
+    );
   }
+
   return (
     <Layout>
       <h1>Categories</h1>
@@ -136,7 +144,7 @@ function Categories({ swal }) {
             </button>
             {properties.length > 0 &&
               properties.map((property, index) => (
-                <div key={property.name} className="flex gap-1 mb-2">
+                <div key={property.id} className="flex gap-1 mb-2">
                   <input
                     type="text"
                     value={property.name}
