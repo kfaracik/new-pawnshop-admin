@@ -13,6 +13,8 @@ export default function ProductForm({
   category: assignedCategory,
   properties: assignedProperties,
 }) {
+  const [isAuction, setIsAuction] = useState(false);
+  const [auctionLink, setAuctionLink] = useState("");
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [category, setCategory] = useState(assignedCategory || "");
@@ -25,11 +27,13 @@ export default function ProductForm({
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const router = useRouter();
+
   useEffect(() => {
     axios.get("/api/categories").then((result) => {
       setCategories(result.data);
     });
   }, []);
+
   async function saveProduct(ev) {
     ev.preventDefault();
     const data = {
@@ -39,7 +43,10 @@ export default function ProductForm({
       images,
       category,
       properties: productProperties,
+      isAuction,
+      auctionLink: isAuction ? auctionLink : null,
     };
+
     if (_id) {
       //update
       await axios.put("/api/products", { ...data, _id });
@@ -49,9 +56,11 @@ export default function ProductForm({
     }
     setGoToProducts(true);
   }
+
   if (goToProducts) {
     router.push("/products");
   }
+
   async function uploadImages(ev) {
     const files = ev.target?.files;
     if (files?.length > 0) {
@@ -67,9 +76,11 @@ export default function ProductForm({
       setIsUploading(false);
     }
   }
+
   function updateImagesOrder(images) {
     setImages(images);
   }
+
   function setProductProp(propName, value) {
     setProductProperties((prev) => {
       const newProductProps = { ...prev };
@@ -182,9 +193,78 @@ export default function ProductForm({
         value={price}
         onChange={(ev) => setPrice(ev.target.value)}
       />
+      <label className="switch-container">
+        <span>Is Auction</span>
+        <div className="switch">
+          <input
+            type="checkbox"
+            checked={isAuction}
+            onChange={(ev) => setIsAuction(ev.target.checked)}
+          />
+          <span className="slider"></span>
+        </div>
+      </label>
+      {isAuction && (
+        <>
+          <label>Auction Link</label>
+          <input
+            type="url"
+            placeholder="Enter auction link"
+            value={auctionLink}
+            onChange={(ev) => setAuctionLink(ev.target.value)}
+          />
+        </>
+      )}
       <button type="submit" className="btn-primary">
         Save
       </button>
+      <style jsx>{`
+        .switch-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 40px;
+          height: 20px;
+        }
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: 0.4s;
+          border-radius: 10px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 16px;
+          width: 16px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: 0.4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: #6b8e23;
+        }
+        input:checked + .slider:before {
+          transform: translateX(20px);
+        }
+      `}</style>
     </form>
   );
 }

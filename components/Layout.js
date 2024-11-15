@@ -23,9 +23,9 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="bg-bgGray min-h-screen">
-      <div className="block md:hidden flex items-center p-4">
-        <button onClick={() => setShowNav(true)}>
+    <div className="bg-bgGray min-h-screen flex flex-col">
+      <header className="block md:hidden flex items-center p-4">
+        <button onClick={() => setShowNav(!showNav)} className="mr-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -39,14 +39,17 @@ export default function Layout({ children }) {
             />
           </svg>
         </button>
-        <div className="flex grow justify-center mr-6 ">
+        <div className="flex grow justify-center">
           <Logo />
         </div>
+      </header>
+      <div className="flex flex-grow">
+        <Nav show={showNav} onClose={() => setShowNav(false)} />
+        <main className="flex-grow p-4">{children}</main>
       </div>
-      <div className="flex ">
-        <Nav show={showNav} />
-        <div className="flex-grow p-4">{children}</div>
-      </div>
+      <footer className="bg-gray-800 text-white py-4 text-center mt-auto">
+        <p>Copyright &copy; 2024 - All Rights Reserved</p>
+      </footer>
     </div>
   );
 }

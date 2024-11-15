@@ -7,6 +7,8 @@ const ProductSchema = new Schema({
   images: [{type:String}],
   category: {type:mongoose.Types.ObjectId, ref:'Category'},
   properties: {type:Object},
+  isAuction: {type: Boolean, default: false},
+  auctionLink: { type: String, default: null },
 }, {
   timestamps: true,
 });

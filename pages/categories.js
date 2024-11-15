@@ -105,7 +105,6 @@ function Categories({ swal }) {
 
   return (
     <Layout>
-      <h1>Categories</h1>
       <div className="new-category-form bg-gray-100 rounded-md shadow-sm p-4 mb-4">
         <label>
           {editedCategory
