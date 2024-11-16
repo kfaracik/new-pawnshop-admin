@@ -12,9 +12,11 @@ export default function ProductForm({
   images: existingImages,
   category: assignedCategory,
   properties: assignedProperties,
+  isAuction: existingIsAuction,
+  auctionLink: existingAuctionLink,
 }) {
-  const [isAuction, setIsAuction] = useState(false);
-  const [auctionLink, setAuctionLink] = useState("");
+  const [isAuction, setIsAuction] = useState(false || existingIsAuction);
+  const [auctionLink, setAuctionLink] = useState("" || existingAuctionLink);
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [category, setCategory] = useState(assignedCategory || "");
