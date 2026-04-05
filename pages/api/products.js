@@ -17,6 +17,7 @@ export default async function handle(req, res) {
       properties,
       isAuction,
       auctionLink,
+      quantity,
     } = body;
 
     return {
@@ -28,6 +29,10 @@ export default async function handle(req, res) {
       properties,
       isAuction: Boolean(isAuction),
       auctionLink: isAuction ? auctionLink : null,
+      quantity:
+        quantity === "" || quantity === null || quantity === undefined
+          ? undefined
+          : Number(quantity),
     };
   }
 

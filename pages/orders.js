@@ -1,10 +1,9 @@
 import Layout from "@/components/Layout";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
-
 export default function OrdersPage() {
-  const [orders,setOrders] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,40 +38,51 @@ export default function OrdersPage() {
         <thead>
           <tr>
             <th>Date</th>
-            <th>Status</th>
+            <th>Order status</th>
+            <th>Payment status</th>
             <th>Recipient</th>
             <th>Products</th>
             <th>Total</th>
           </tr>
         </thead>
         <tbody>
-        {orders.length > 0 && orders.map(order => (
-          <tr key={order._id}>
-            <td>{(new Date(order.createdAt)).toLocaleString()}
-            </td>
-            <td className={order.status === "completed" ? "text-green-600" : ""}>
-              {order.status}
-            </td>
-            <td>
-              {order.customer?.name} {order.customer?.email}<br />
-              {order.customer?.city} {order.customer?.postalCode} {order.customer?.country}<br />
-              {order.customer?.streetAddress}
-            </td>
-            <td>
-              {(order.products || []).map((p, index) => (
-                <span key={`${order._id}-${index}`}>
-                  {p.name} x{p.quantity}<br />
-                </span>
-              ))}
-            </td>
-            <td>{typeof order.totalAmount === "number" ? `${order.totalAmount.toFixed(2)} PLN` : "-"}</td>
-          </tr>
-        ))}
-        {orders.length === 0 && !isLoading && (
-          <tr>
-            <td colSpan={5}>No orders found.</td>
-          </tr>
-        )}
+          {orders.length > 0 &&
+            orders.map((order) => (
+              <tr key={order._id}>
+                <td>{new Date(order.createdAt).toLocaleString()}</td>
+                <td className={order.orderStatus === "completed" ? "text-green-600" : ""}>
+                  {order.orderStatus || "pending_payment"}
+                </td>
+                <td className={order.paymentStatus === "paid" ? "text-green-600" : ""}>
+                  {order.paymentStatus || "unpaid"}
+                </td>
+                <td>
+                  {order.customer?.name} {order.customer?.email}
+                  <br />
+                  {order.customer?.city} {order.customer?.postalCode} {order.customer?.country}
+                  <br />
+                  {order.customer?.streetAddress}
+                </td>
+                <td>
+                  {(order.products || []).map((p, index) => (
+                    <span key={`${order._id}-${index}`}>
+                      {p.name} x{p.quantity}
+                      <br />
+                    </span>
+                  ))}
+                </td>
+                <td>
+                  {typeof order.totalAmount === "number"
+                    ? `${order.totalAmount.toFixed(2)} PLN`
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          {orders.length === 0 && !isLoading && (
+            <tr>
+              <td colSpan={6}>No orders found.</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </Layout>

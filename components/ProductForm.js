@@ -14,6 +14,7 @@ export default function ProductForm({
   properties: assignedProperties,
   isAuction: existingIsAuction,
   auctionLink: existingAuctionLink,
+  quantity: existingQuantity,
 }) {
   const [isAuction, setIsAuction] = useState(false || existingIsAuction);
   const [auctionLink, setAuctionLink] = useState("" || existingAuctionLink);
@@ -24,6 +25,11 @@ export default function ProductForm({
     assignedProperties || {}
   );
   const [price, setPrice] = useState(existingPrice || "");
+  const [quantity, setQuantity] = useState(
+    existingQuantity === undefined || existingQuantity === null
+      ? ""
+      : String(existingQuantity)
+  );
   const [images, setImages] = useState(existingImages || []);
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -126,6 +132,7 @@ export default function ProductForm({
       title: title.trim(),
       description,
       price,
+      quantity,
       images,
       category,
       properties: productProperties,
@@ -370,6 +377,15 @@ export default function ProductForm({
         min="0.01"
         step="0.01"
         required
+      />
+      <label>Quantity (stock limit)</label>
+      <input
+        type="number"
+        placeholder="quantity"
+        value={quantity}
+        onChange={(ev) => setQuantity(ev.target.value)}
+        min="0"
+        step="1"
       />
       <label className="switch-container">
         <span>Is Auction</span>
