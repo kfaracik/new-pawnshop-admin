@@ -22,6 +22,29 @@ The `pages/api` directory is mapped to `/api/*`. Files in this directory are tre
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Production Google Login (NextAuth)
+
+To make Google login work correctly in production, configure all items below:
+
+1. Google Cloud OAuth:
+- Add **Authorized redirect URI**:
+  - `https://your-domain.com/api/auth/callback/google`
+
+2. Production environment variables:
+- `NEXTAUTH_URL=https://your-domain.com`
+- `SECRET=<strong-random-secret>`
+- `GOOGLE_ID=<google-oauth-client-id>`
+- `GOOGLE_SECRET=<google-oauth-client-secret>`
+- `MONGODB_URI=<production-mongodb-uri>`
+
+3. Admin access:
+- In `pages/api/auth/[...nextauth].js`, ensure `adminEmails` includes exact Google account emails for admins.
+
+4. HTTPS:
+- Production domain must be served over HTTPS.
+
+If any of the above is missing, Google sign-in may fail or user session can be rejected as non-admin.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
