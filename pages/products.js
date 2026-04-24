@@ -32,7 +32,6 @@ export default function Products() {
         <thead>
           <tr>
             <td>Product name</td>
-            <td>Is Auction</td>
             <td></td>
           </tr>
         </thead>
@@ -40,7 +39,6 @@ export default function Products() {
           {products.map((product) => (
             <tr key={product._id}>
               <td>{product.title}</td>
-              <td>{product.isAuction ? "Yes" : "No"}</td>
               <td>
                 <Link
                   className="btn-default"
@@ -62,14 +60,6 @@ export default function Products() {
                   </svg>
                   Edit
                 </Link>
-                {product.isAuction && (
-                  <Link
-                    className="btn-default"
-                    href={"/products/edit/" + product._id + "#auction-config"}
-                  >
-                    Auction
-                  </Link>
-                )}
                 <Link
                   className="btn-red"
                   href={"/products/delete/" + product._id}

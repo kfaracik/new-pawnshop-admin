@@ -15,8 +15,6 @@ export default async function handle(req, res) {
       images,
       category,
       properties,
-      isAuction,
-      auctionLink,
       quantity,
     } = body;
 
@@ -27,8 +25,6 @@ export default async function handle(req, res) {
       images,
       category: category ? category : undefined,
       properties,
-      isAuction: Boolean(isAuction),
-      auctionLink: isAuction ? auctionLink : null,
       quantity:
         quantity === "" || quantity === null || quantity === undefined
           ? undefined
