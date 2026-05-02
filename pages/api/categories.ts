@@ -1,14 +1,52 @@
+import type { NextApiRequest, NextApiResponse } from "next";
 import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
 
-function getErrorMessage(payload, fallback) {
+type BackendCategory = {
+  _id: string;
+  parentId?: string | null;
+  properties?: BackendCategoryProperty[];
+};
+
+type BackendCategoryProperty = {
+  name?: string;
+  values?: string[];
+};
+
+function normalizeCategoryProperties(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const name = typeof item.name === "string" ? item.name.trim() : "";
+      const values = Array.isArray(item.values)
+        ? item.values
+            .map((entry: unknown) => (typeof entry === "string" ? entry.trim() : ""))
+            .filter(Boolean)
+        : [];
+
+      if (!name) return null;
+
+      return {
+        name,
+        values: [...new Set(values)],
+      };
+    })
+    .filter(Boolean);
+}
+
+function getErrorMessage(payload: unknown, fallback: string) {
   if (!payload) return fallback;
   if (typeof payload === "string") return payload;
-  if (typeof payload?.error === "string") return payload.error;
-  if (typeof payload?.message === "string") return payload.message;
+  if (typeof payload === "object" && payload !== null) {
+    if ("error" in payload && typeof payload.error === "string") return payload.error;
+    if ("message" in payload && typeof payload.message === "string") return payload.message;
+  }
   return fallback;
 }
 
-function normalizeAdminCategoryShape(categories) {
+function normalizeAdminCategoryShape(categories: BackendCategory[]) {
   const byId = new Map(categories.map((category) => [String(category._id), category]));
 
   return categories.map((category) => ({
@@ -19,7 +57,7 @@ function normalizeAdminCategoryShape(categories) {
   }));
 }
 
-export default async function handle(req, res) {
+export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   await isAdminRequest(req, res);
 
   const backendUrl = process.env.AUCTION_BACKEND_URL;
@@ -27,8 +65,7 @@ export default async function handle(req, res) {
 
   if (!backendUrl || !backendToken) {
     return res.status(500).json({
-      error:
-        "Missing AUCTION_BACKEND_URL or AUCTION_ADMIN_TOKEN in admin environment.",
+      error: "Missing AUCTION_BACKEND_URL or AUCTION_ADMIN_TOKEN in admin environment.",
     });
   }
 
@@ -42,26 +79,26 @@ export default async function handle(req, res) {
         },
       });
 
-      const payload = await response.json();
-
+      const payload = (await response.json()) as unknown;
       if (!response.ok) {
         return res.status(response.status).json({
           error: getErrorMessage(payload, "Failed to load categories."),
         });
       }
 
-      const categories = Array.isArray(payload) ? payload : [];
+      const categories = Array.isArray(payload) ? (payload as BackendCategory[]) : [];
       return res.status(200).json(normalizeAdminCategoryShape(categories));
     }
 
     if (req.method === "POST") {
-      const body = req.body || {};
+      const body = (req.body || {}) as Record<string, unknown>;
       const backendPayload = {
         name: body.name,
         slug: body.slug,
         parentId: body.parentCategory || null,
         isActive: typeof body.isActive === "boolean" ? body.isActive : true,
         sortOrder: Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0,
+        properties: normalizeCategoryProperties(body.properties),
       };
 
       const response = await fetch(targetBaseUrl, {
@@ -73,7 +110,7 @@ export default async function handle(req, res) {
         body: JSON.stringify(backendPayload),
       });
 
-      const payload = await response.json();
+      const payload = (await response.json()) as unknown;
       if (!response.ok) {
         return res.status(response.status).json({
           error: getErrorMessage(payload, "Failed to create category."),
@@ -84,7 +121,7 @@ export default async function handle(req, res) {
     }
 
     if (req.method === "PUT") {
-      const body = req.body || {};
+      const body = (req.body || {}) as Record<string, unknown>;
       if (!body._id) {
         return res.status(400).json({ error: "Category id is required." });
       }
@@ -95,6 +132,7 @@ export default async function handle(req, res) {
         parentId: body.parentCategory || null,
         isActive: typeof body.isActive === "boolean" ? body.isActive : true,
         sortOrder: Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0,
+        properties: normalizeCategoryProperties(body.properties),
       };
 
       const response = await fetch(`${targetBaseUrl}/${body._id}`, {
@@ -106,7 +144,7 @@ export default async function handle(req, res) {
         body: JSON.stringify(backendPayload),
       });
 
-      const payload = await response.json();
+      const payload = (await response.json()) as unknown;
       if (!response.ok) {
         return res.status(response.status).json({
           error: getErrorMessage(payload, "Failed to update category."),
@@ -117,19 +155,19 @@ export default async function handle(req, res) {
     }
 
     if (req.method === "DELETE") {
-      const { _id } = req.query;
-      if (!_id) {
+      const id = req.query._id;
+      if (!id) {
         return res.status(400).json({ error: "Category id is required." });
       }
 
-      const response = await fetch(`${targetBaseUrl}/${_id}`, {
+      const response = await fetch(`${targetBaseUrl}/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${backendToken}`,
         },
       });
 
-      const payload = await response.json();
+      const payload = (await response.json()) as unknown;
       if (!response.ok) {
         return res.status(response.status).json({
           error: getErrorMessage(payload, "Failed to delete category."),
@@ -143,7 +181,10 @@ export default async function handle(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
     return res.status(502).json({
-      error: error?.message || "Failed to connect to backend categories endpoint.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to connect to backend categories endpoint.",
     });
   }
 }

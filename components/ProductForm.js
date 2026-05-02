@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import axios from "axios";
 import Spinner from "@/components/Spinner";
 import { ReactSortable } from "react-sortablejs";
+import {
+  buildProductPayload,
+  getPropertiesToFill,
+  validateProductInput,
+} from "@/lib/products";
 
 export default function ProductForm({
   _id,
@@ -13,6 +19,8 @@ export default function ProductForm({
   category: assignedCategory,
   properties: assignedProperties,
   quantity: existingQuantity,
+  availabilityMode: existingAvailabilityMode,
+  availableLocations: existingAvailableLocations,
 }) {
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
@@ -27,6 +35,14 @@ export default function ProductForm({
       : String(existingQuantity)
   );
   const [images, setImages] = useState(existingImages || []);
+  const [availabilityMode, setAvailabilityMode] = useState(
+    existingAvailabilityMode || "online_only"
+  );
+  const [availableLocations, setAvailableLocations] = useState(
+    Array.isArray(existingAvailableLocations)
+      ? existingAvailableLocations.join(", ")
+      : ""
+  );
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,25 +60,26 @@ export default function ProductForm({
     ev.preventDefault();
     setFormError("");
 
-    if (!title.trim()) {
-      setFormError("Product name is required.");
+    const validationError = validateProductInput({ title, price });
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
-    if (price === "" || Number(price) <= 0 || Number.isNaN(Number(price))) {
-      setFormError("Price must be a number greater than 0.");
-      return;
-    }
-
-    const data = {
-      title: title.trim(),
+    const data = buildProductPayload({
+      title,
       description,
       price,
       quantity,
       images,
       category,
       properties: productProperties,
-    };
+      availabilityMode,
+      availableLocations: availableLocations
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    });
 
     try {
       setIsSaving(true);
@@ -125,31 +142,27 @@ export default function ProductForm({
     });
   }
 
-  const propertiesToFill = [];
-  if (categories.length > 0 && category) {
-    let catInfo = categories.find(({ _id }) => _id === category);
-    propertiesToFill.push(...catInfo.properties);
-    while (catInfo?.parent?._id) {
-      const parentCat = categories.find(
-        ({ _id }) => _id === catInfo?.parent?._id
-      );
-      propertiesToFill.push(...parentCat.properties);
-      catInfo = parentCat;
-    }
-  }
+  const propertiesToFill = getPropertiesToFill(categories, category);
+  const titleId = "product-title";
+  const categoryId = "product-category";
+  const descriptionId = "product-description";
+  const priceId = "product-price";
+  const quantityId = "product-quantity";
+  const photosId = "product-photos";
 
   return (
-    <form onSubmit={saveProduct}>
-      <label>Product name</label>
+    <form onSubmit={saveProduct} aria-describedby={formError ? "product-form-error" : undefined}>
+      <label htmlFor={titleId}>Product name</label>
       <input
+        id={titleId}
         type="text"
         placeholder="product name"
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
         required
       />
-      <label>Category</label>
-      <select value={category} onChange={(ev) => setCategory(ev.target.value)}>
+      <label htmlFor={categoryId}>Category</label>
+      <select id={categoryId} value={category} onChange={(ev) => setCategory(ev.target.value)}>
         <option value="">Uncategorized</option>
         {categories.length > 0 &&
           categories.map((c) => (
@@ -159,13 +172,14 @@ export default function ProductForm({
           ))}
       </select>
       {propertiesToFill.length > 0 &&
-        propertiesToFill
-          .filter((p) => p && typeof p.name === "string" && p.name.length > 0)
-          .map((p) => (
+        propertiesToFill.map((p) => (
             <div key={p.name} className="">
-              <label>{p.name.charAt(0).toUpperCase() + p.name.slice(1)}</label>
+              <label htmlFor={`property-${p.name}`}>
+                {p.name.charAt(0).toUpperCase() + p.name.slice(1)}
+              </label>
               <div>
                 <select
+                  id={`property-${p.name}`}
                   value={productProperties[p.name]}
                   onChange={(ev) => setProductProp(p.name, ev.target.value)}
                 >
@@ -178,7 +192,7 @@ export default function ProductForm({
               </div>
             </div>
           ))}
-      <label>Photos</label>
+      <label htmlFor={photosId}>Photos</label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
           list={images}
@@ -191,7 +205,14 @@ export default function ProductForm({
                 key={link}
                 className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
               >
-                <img src={link} alt="" className="rounded-lg" />
+                <Image
+                  src={link}
+                  alt={`Podgląd zdjęcia produktu ${title || ""}`.trim()}
+                  className="rounded-lg"
+                  width={96}
+                  height={96}
+                  unoptimized
+                />
               </div>
             ))}
         </ReactSortable>
@@ -200,7 +221,7 @@ export default function ProductForm({
             <Spinner />
           </div>
         )}
-        <label className="w-24 h-24 cursor-pointer text-center flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
+        <label htmlFor={photosId} className="w-24 h-24 cursor-pointer text-center flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -216,17 +237,19 @@ export default function ProductForm({
             />
           </svg>
           <div>Add image</div>
-          <input type="file" onChange={uploadImages} className="hidden" />
+          <input id={photosId} type="file" onChange={uploadImages} className="hidden" multiple />
         </label>
       </div>
-      <label>Description</label>
+      <label htmlFor={descriptionId}>Description</label>
       <textarea
+        id={descriptionId}
         placeholder="description"
         value={description}
         onChange={(ev) => setDescription(ev.target.value)}
       />
-      <label>Price (in PLN)</label>
+      <label htmlFor={priceId}>Price (in PLN)</label>
       <input
+        id={priceId}
         type="number"
         placeholder="price"
         value={price}
@@ -235,8 +258,9 @@ export default function ProductForm({
         step="0.01"
         required
       />
-      <label>Quantity (stock limit)</label>
+      <label htmlFor={quantityId}>Quantity (stock limit)</label>
       <input
+        id={quantityId}
         type="number"
         placeholder="quantity"
         value={quantity}
@@ -244,7 +268,27 @@ export default function ProductForm({
         min="0"
         step="1"
       />
-      {formError && <p className="form-error">{formError}</p>}
+      <label htmlFor="availability-mode">Availability mode</label>
+      <select
+        id="availability-mode"
+        value={availabilityMode}
+        onChange={(ev) => setAvailabilityMode(ev.target.value)}
+      >
+        <option value="online_only">Online only</option>
+        <option value="single_location">Single location</option>
+        <option value="multiple_locations">Multiple locations</option>
+      </select>
+      <label htmlFor="available-locations">
+        Available locations (comma separated)
+      </label>
+      <input
+        id="available-locations"
+        type="text"
+        placeholder="np. Częstochowa NPM, Katowice"
+        value={availableLocations}
+        onChange={(ev) => setAvailableLocations(ev.target.value)}
+      />
+      {formError && <p id="product-form-error" className="form-error" role="alert">{formError}</p>}
       <button type="submit" className="btn-primary" disabled={isSaving}>
         {isSaving ? "Saving..." : "Save"}
       </button>

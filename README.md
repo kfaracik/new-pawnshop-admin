@@ -1,61 +1,57 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# New Pawnshop Admin
 
-## Getting Started
+Administrative panel for catalog, categories, orders and protected backoffice actions.
 
-First, run the development server:
+## Current state
+
+- TypeScript foundation added with incremental migration support.
+- Core app shell, MongoDB helpers and selected API routes are migrated to TS.
+- NextAuth admin gate now normalizes email checks and rejects non-admin sign-ins earlier.
+- Admin API routes proxying backend services now return safer typed error handling.
+
+## Architecture
+
+- The project is not fully feature-based yet.
+- Current structure is still mixed between `pages`, `components`, `lib` and `models`.
+- Product form logic has been partially extracted into `lib/products.ts` to reduce component bloat.
+- Recommended next step is feature grouping such as `features/products`, `features/categories`, `features/orders`, with shared layout/auth utilities outside feature folders.
+
+## Required environment variables
+
+```env
+NEXTAUTH_URL=https://admin.example.com
+SECRET=replace-with-strong-secret
+GOOGLE_ID=google-oauth-client-id
+GOOGLE_SECRET=google-oauth-client-secret
+MONGODB_URI=mongodb+srv://...
+AUCTION_BACKEND_URL=https://api.example.com
+AUCTION_ADMIN_TOKEN=replace-with-strong-service-token
+```
+
+## Scripts
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npm run build
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Production checklist
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+- Restrict Google OAuth to production callback URLs only.
+- Replace environment allowlist with a managed role model.
+- Expand backend-side audit logging review for all privileged flows.
+- Continue TS migration of remaining pages/components/forms.
+- Review CSP, upload validation and S3 object permissions if uploads are enabled.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+Current implementation notes:
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+- `ADMIN_EMAILS` can now be provided as a comma-separated allowlist for admin access.
+- Upload API now rejects non-image files and files over the current size limit.
+- Categories page has been split into smaller UI modules to reduce page-level bloat and improve maintainability.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Planned legal and operational work
 
-## Production Google Login (NextAuth)
-
-To make Google login work correctly in production, configure all items below:
-
-1. Google Cloud OAuth:
-- Add **Authorized redirect URI**:
-  - `https://your-domain.com/api/auth/callback/google`
-
-2. Production environment variables:
-- `NEXTAUTH_URL=https://your-domain.com`
-- `SECRET=<strong-random-secret>`
-- `GOOGLE_ID=<google-oauth-client-id>`
-- `GOOGLE_SECRET=<google-oauth-client-secret>`
-- `MONGODB_URI=<production-mongodb-uri>`
-
-3. Admin access:
-- In `pages/api/auth/[...nextauth].js`, ensure `adminEmails` includes exact Google account emails for admins.
-
-4. HTTPS:
-- Production domain must be served over HTTPS.
-
-If any of the above is missing, Google sign-in may fail or user session can be rejected as non-admin.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Define admin data access policy and least-privilege roles.
+- Add documented retention/access rules for customer and order data.
+- Add internal procedures for complaint handling, suspicious item escalation and provenance checks.

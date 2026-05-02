@@ -12,6 +12,7 @@ export default function Layout({ children }) {
       <div className="bg-bgGray w-screen h-screen flex items-center">
         <div className="text-center w-full">
           <button
+            type="button"
             onClick={() => signIn("google")}
             className="bg-white p-2 px-4 rounded-lg"
           >
@@ -24,8 +25,16 @@ export default function Layout({ children }) {
 
   return (
     <div className="bg-bgGray min-h-screen flex flex-col">
-      <header className="block md:hidden flex items-center p-4">
-        <button onClick={() => setShowNav(!showNav)} className="mr-4">
+      <a className="skip-link" href="#main-content">
+        Przejdź do treści
+      </a>
+      <header className="flex items-center p-4 md:hidden">
+        <button
+          type="button"
+          aria-label={showNav ? "Zamknij menu nawigacji" : "Otwórz menu nawigacji"}
+          onClick={() => setShowNav(!showNav)}
+          className="mr-4"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -45,7 +54,7 @@ export default function Layout({ children }) {
       </header>
       <div className="flex flex-grow">
         <Nav show={showNav} onClose={() => setShowNav(false)} />
-        <main className="flex-grow p-4">{children}</main>
+        <main id="main-content" className="flex-grow p-3 sm:p-4">{children}</main>
       </div>
       <footer className="bg-gray-800 text-white py-4 text-center mt-auto">
         <p>Copyright &copy; 2024 - All Rights Reserved</p>

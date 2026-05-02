@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import CategoryForm from "@/components/CategoryForm";
+import CategoryList from "@/components/CategoryList";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { withSwal } from "react-sweetalert2";
@@ -24,6 +26,17 @@ function Categories({ swal }) {
     axios.get("/api/categories").then((result) => {
       setCategories(result.data);
     });
+  }
+
+  function resetForm() {
+    setEditedCategory(null);
+    setName("");
+    setSlug("");
+    setIsActive(true);
+    setSortOrder(0);
+    setParentCategory("");
+    setProperties([]);
+    setFormError("");
   }
 
   async function saveCategory(ev) {
@@ -53,16 +66,10 @@ function Categories({ swal }) {
       if (editedCategory) {
         data._id = editedCategory._id;
         await axios.put("/api/categories", data);
-        setEditedCategory(null);
       } else {
         await axios.post("/api/categories", data);
       }
-      setName("");
-      setSlug("");
-      setIsActive(true);
-      setSortOrder(0);
-      setParentCategory("");
-      setProperties([]);
+      resetForm();
       fetchCategories();
     } catch (error) {
       setFormError(
@@ -159,7 +166,7 @@ function Categories({ swal }) {
     setProperties((prev) => [...prev, { id: uuidv4(), name: "", values: "" }]);
   }
 
-  function handlePropertyNameChange(index, property, newName) {
+  function handlePropertyNameChange(index, newName) {
     setProperties((prev) => {
       const properties = [...prev];
       properties[index].name = newName;
@@ -167,7 +174,7 @@ function Categories({ swal }) {
     });
   }
 
-  function handlePropertyValuesChange(index, property, newValues) {
+  function handlePropertyValuesChange(index, newValues) {
     setProperties((prev) => {
       const properties = [...prev];
       properties[index].values = newValues;
@@ -183,188 +190,36 @@ function Categories({ swal }) {
 
   return (
     <Layout>
-      <div className="new-category-form bg-gray-100 rounded-md shadow-sm p-4 mb-4">
-        <label>
-          {editedCategory
-            ? `Edit category ${editedCategory.name}`
-            : "Create new category"}
-        </label>
-        {formError && <p className="text-red-600 mb-2">{formError}</p>}
-        <form onSubmit={saveCategory}>
-          <div className="flex gap-1">
-            <input
-              type="text"
-              placeholder={"Category name"}
-              onChange={(ev) => setName(ev.target.value)}
-              value={name}
-              required
-            />
-            <input
-              type="text"
-              placeholder={"Category slug (optional)"}
-              onChange={(ev) => setSlug(ev.target.value)}
-              value={slug}
-            />
-            <select
-              onChange={(ev) => setParentCategory(ev.target.value)}
-              value={parentCategory}
-            >
-              <option value="">No parent category</option>
-              {categories.length > 0 &&
-                categories.map((category) => (
-                  <option
-                    key={category._id}
-                    value={category._id}
-                    disabled={editedCategory?._id === category._id}
-                  >
-                    {category.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div className="flex gap-3 items-center mb-2">
-            <label className="flex items-center gap-2 mb-0">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(ev) => setIsActive(ev.target.checked)}
-              />
-              Active
-            </label>
-            <div className="flex items-center gap-1">
-              <span>Sort order</span>
-              <input
-                type="number"
-                value={sortOrder}
-                onChange={(ev) => setSortOrder(ev.target.value)}
-                className="mb-0 w-24"
-              />
-            </div>
-          </div>
-          <div className="mb-2">
-            <label className="block">Properties</label>
-            <button
-              onClick={addProperty}
-              type="button"
-              className="btn-default text-sm mb-2"
-            >
-              Add new property
-            </button>
-            {properties.length > 0 &&
-              properties.map((property, index) => (
-                <div key={property.id} className="flex gap-1 mb-2">
-                  <input
-                    type="text"
-                    value={property.name}
-                    className="mb-0"
-                    onChange={(ev) =>
-                      handlePropertyNameChange(index, property, ev.target.value)
-                    }
-                    placeholder="property name (example: color)"
-                  />
-                  <input
-                    type="text"
-                    className="mb-0"
-                    onChange={(ev) =>
-                      handlePropertyValuesChange(
-                        index,
-                        property,
-                        ev.target.value
-                      )
-                    }
-                    value={property.values}
-                    placeholder="values, comma separated"
-                  />
-                  <button
-                    onClick={() => removeProperty(index)}
-                    type="button"
-                    className="btn-red"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-          </div>
-          <div className="flex gap-1">
-            {editedCategory && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditedCategory(null);
-                  setName("");
-                  setSlug("");
-                  setIsActive(true);
-                  setSortOrder(0);
-                  setParentCategory("");
-                  setProperties([]);
-                  setFormError("");
-                }}
-                className="btn-default"
-              >
-                Cancel
-              </button>
-            )}
-            <button type="submit" className="btn-primary py-1" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </form>
-      </div>
+      <CategoryForm
+        editedCategory={editedCategory}
+        formError={formError}
+        name={name}
+        setName={setName}
+        slug={slug}
+        setSlug={setSlug}
+        isActive={isActive}
+        setIsActive={setIsActive}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        parentCategory={parentCategory}
+        setParentCategory={setParentCategory}
+        categories={categories}
+        properties={properties}
+        addProperty={addProperty}
+        handlePropertyNameChange={handlePropertyNameChange}
+        handlePropertyValuesChange={handlePropertyValuesChange}
+        removeProperty={removeProperty}
+        saveCategory={saveCategory}
+        resetForm={resetForm}
+        isSaving={isSaving}
+      />
       {!editedCategory && (
-        <table className="basic mt-4">
-          <thead>
-            <tr>
-              <td>Category name</td>
-              <td>Slug</td>
-              <td>Status</td>
-              <td>Order</td>
-              <td>Parent category</td>
-              <td></td>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.length > 0 &&
-              categories.map((category, index) => (
-                <tr key={category._id}>
-                  <td>{category.name}</td>
-                  <td>{category.slug || "-"}</td>
-                  <td>{category.isActive ? "Active" : "Hidden"}</td>
-                  <td>{category.sortOrder ?? index}</td>
-                  <td>{category?.parent?.name}</td>
-                  <td>
-                    <button
-                      onClick={() => moveCategory(index, "up")}
-                      className="btn-default mr-1"
-                      type="button"
-                      disabled={index === 0}
-                    >
-                      Up
-                    </button>
-                    <button
-                      onClick={() => moveCategory(index, "down")}
-                      className="btn-default mr-1"
-                      type="button"
-                      disabled={index === categories.length - 1}
-                    >
-                      Down
-                    </button>
-                    <button
-                      onClick={() => editCategory(category)}
-                      className="btn-default mr-1"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteCategory(category)}
-                      className="btn-red"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        <CategoryList
+          categories={categories}
+          editCategory={editCategory}
+          deleteCategory={deleteCategory}
+          moveCategory={moveCategory}
+        />
       )}
     </Layout>
   );

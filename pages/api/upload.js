@@ -23,6 +23,12 @@ export default async function handle(req, res) {
 
     // Temporary storage strategy: keep images directly in MongoDB as data URLs.
     const links = [];
+    const allowedMimeTypes = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ]);
     for (const file of files.file) {
       const filePath = file.path || file.filepath;
       const maxFileSizeBytes = 2 * 1024 * 1024;
@@ -35,6 +41,13 @@ export default async function handle(req, res) {
         mime.lookup(file.originalFilename || "") ||
         mime.lookup(filePath || "") ||
         "application/octet-stream";
+
+      if (!allowedMimeTypes.has(String(contentType))) {
+        return res.status(400).json({
+          error: "Only JPG, PNG, WEBP and GIF images are allowed.",
+        });
+      }
+
       const fileBuffer = fs.readFileSync(filePath);
       const base64 = fileBuffer.toString("base64");
       const dataUrl = `data:${contentType};base64,${base64}`;
