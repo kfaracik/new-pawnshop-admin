@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Image from "next/image";
 import axios from "axios";
 import Spinner from "@/components/Spinner";
 import { ReactSortable } from "react-sortablejs";
@@ -35,24 +34,29 @@ export default function ProductForm({
       : String(existingQuantity)
   );
   const [images, setImages] = useState(existingImages || []);
-  const [availabilityMode, setAvailabilityMode] = useState(
-    existingAvailabilityMode || "online_only"
+  const [isOnlineOnly, setIsOnlineOnly] = useState(
+    !existingAvailabilityMode || existingAvailabilityMode === "online_only"
   );
+  const [locations, setLocations] = useState([]);
   const [availableLocations, setAvailableLocations] = useState(
     Array.isArray(existingAvailableLocations)
-      ? existingAvailableLocations.join(", ")
-      : ""
+      ? existingAvailableLocations.map(String)
+      : []
   );
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [categories, setCategories] = useState([]);
+  const [brokenImages, setBrokenImages] = useState({});
   const router = useRouter();
 
   useEffect(() => {
     axios.get("/api/categories").then((result) => {
       setCategories(result.data);
+    });
+    axios.get("/api/locations").then((result) => {
+      setLocations(Array.isArray(result.data) ? result.data : []);
     });
   }, []);
 
@@ -66,6 +70,13 @@ export default function ProductForm({
       return;
     }
 
+    const normalizedAvailabilityMode =
+      isOnlineOnly || availableLocations.length === 0
+        ? "online_only"
+        : availableLocations.length === 1
+          ? "single_location"
+          : "multiple_locations";
+
     const data = buildProductPayload({
       title,
       description,
@@ -74,11 +85,8 @@ export default function ProductForm({
       images,
       category,
       properties: productProperties,
-      availabilityMode,
-      availableLocations: availableLocations
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      availabilityMode: normalizedAvailabilityMode,
+      availableLocations: isOnlineOnly ? [] : availableLocations,
     });
 
     try {
@@ -134,12 +142,39 @@ export default function ProductForm({
     setImages(images);
   }
 
+  function removeImage(imageToRemove) {
+    setImages((currentImages) =>
+      currentImages.filter((image) => image !== imageToRemove)
+    );
+    setBrokenImages((current) => {
+      if (!current[imageToRemove]) return current;
+      const next = { ...current };
+      delete next[imageToRemove];
+      return next;
+    });
+  }
+
   function setProductProp(propName, value) {
     setProductProperties((prev) => {
       const newProductProps = { ...prev };
       newProductProps[propName] = value;
       return newProductProps;
     });
+  }
+
+  function handleAvailabilitySelectionChange(ev) {
+    const selectedValues = Array.from(ev.target.selectedOptions).map(
+      (option) => option.value
+    );
+
+    if (selectedValues.includes("online_only")) {
+      setIsOnlineOnly(true);
+      setAvailableLocations([]);
+      return;
+    }
+
+    setIsOnlineOnly(false);
+    setAvailableLocations(selectedValues);
   }
 
   const propertiesToFill = getPropertiesToFill(categories, category);
@@ -203,16 +238,37 @@ export default function ProductForm({
             images.map((link) => (
               <div
                 key={link}
-                className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
+                className="relative h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
               >
-                <Image
-                  src={link}
-                  alt={`Podgląd zdjęcia produktu ${title || ""}`.trim()}
-                  className="rounded-lg"
-                  width={96}
-                  height={96}
-                  unoptimized
-                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(link)}
+                  className="absolute right-1 top-1 rounded bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow-sm border border-red-100 hover:bg-red-50"
+                  aria-label="Usuń grafikę produktu"
+                >
+                  Usuń
+                </button>
+                {brokenImages[link] ? (
+                  <div className="image-fallback" aria-label="Nie udało się załadować podglądu zdjęcia">
+                    Brak podglądu
+                  </div>
+                ) : (
+                  <img
+                    src={link}
+                    alt={`Podgląd zdjęcia produktu ${title || ""}`.trim()}
+                    className="image-preview"
+                    width={96}
+                    height={96}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    onError={() =>
+                      setBrokenImages((current) => ({
+                        ...current,
+                        [link]: true,
+                      }))
+                    }
+                  />
+                )}
               </div>
             ))}
         </ReactSortable>
@@ -268,26 +324,30 @@ export default function ProductForm({
         min="0"
         step="1"
       />
-      <label htmlFor="availability-mode">Availability mode</label>
-      <select
-        id="availability-mode"
-        value={availabilityMode}
-        onChange={(ev) => setAvailabilityMode(ev.target.value)}
-      >
-        <option value="online_only">Online only</option>
-        <option value="single_location">Single location</option>
-        <option value="multiple_locations">Multiple locations</option>
-      </select>
-      <label htmlFor="available-locations">
-        Available locations (comma separated)
-      </label>
-      <input
-        id="available-locations"
-        type="text"
-        placeholder="np. Częstochowa NPM, Katowice"
-        value={availableLocations}
-        onChange={(ev) => setAvailableLocations(ev.target.value)}
-      />
+      <label htmlFor="availability-selection">Dostępność produktu</label>
+      <div className="location-picker">
+        <select
+          id="availability-selection"
+          multiple
+          size={Math.min(Math.max(locations.length + 1, 4), 8)}
+          value={isOnlineOnly ? ["online_only"] : availableLocations}
+          onChange={handleAvailabilitySelectionChange}
+        >
+          <option value="online_only">Online only</option>
+          {locations.map((location) => (
+            <option key={location._id} value={String(location._id)}>
+              {location.name}
+              {location.city ? ` | ${location.city}` : ""}
+              {location.addressLine1 ? ` | ${location.addressLine1}` : ""}
+            </option>
+          ))}
+        </select>
+        {locations.length === 0 && (
+          <p className="location-hint">
+            Nie masz jeszcze dodanych lokalizacji. Uzupełnij je najpierw w sekcji Locations.
+          </p>
+        )}
+      </div>
       {formError && <p id="product-form-error" className="form-error" role="alert">{formError}</p>}
       <button type="submit" className="btn-primary" disabled={isSaving}>
         {isSaving ? "Saving..." : "Save"}
@@ -296,6 +356,46 @@ export default function ProductForm({
         .form-error {
           color: #dc2626;
           margin-bottom: 10px;
+        }
+
+        .location-picker {
+          display: grid;
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+
+        .location-picker :global(select) {
+          min-height: 160px;
+        }
+
+        .location-hint {
+          color: #4b5563;
+          font-size: 0.92rem;
+        }
+
+        .image-preview,
+        .image-fallback {
+          width: 96px;
+          height: 96px;
+          border-radius: 8px;
+        }
+
+        .image-preview {
+          object-fit: contain;
+          display: block;
+          background: #fff;
+        }
+
+        .image-fallback {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          font-size: 0.75rem;
+          color: #6b7280;
+          background: #f3f4f6;
+          border: 1px dashed #d1d5db;
+          padding: 8px;
         }
       `}</style>
     </form>

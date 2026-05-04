@@ -1,4 +1,5 @@
 function CategoryList({
+  isLoading,
   categories,
   editCategory,
   deleteCategory,
@@ -7,6 +8,25 @@ function CategoryList({
   return (
     <>
       <div className="mt-4 grid gap-3 md:hidden">
+        {isLoading &&
+          Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={`mobile-category-skeleton-${index}`}
+              className="animate-pulse rounded-md border border-gray-200 bg-white p-3 shadow-sm"
+            >
+              <div className="mb-2 h-5 w-3/4 rounded bg-gray-200" />
+              <div className="mb-2 h-4 w-1/2 rounded bg-gray-200" />
+              <div className="mb-2 h-4 w-2/5 rounded bg-gray-200" />
+              <div className="mb-2 h-4 w-1/3 rounded bg-gray-200" />
+              <div className="mb-3 h-4 w-3/5 rounded bg-gray-200" />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-10 rounded bg-gray-200" />
+                <div className="h-10 rounded bg-gray-200" />
+                <div className="h-10 rounded bg-gray-200" />
+                <div className="h-10 rounded bg-gray-200" />
+              </div>
+            </div>
+          ))}
         {categories.length > 0 &&
           categories.map((category, index) => (
             <div
@@ -74,6 +94,34 @@ function CategoryList({
             </tr>
           </thead>
           <tbody>
+            {isLoading &&
+              Array.from({ length: 6 }).map((_, index) => (
+                <tr key={`desktop-category-skeleton-${index}`}>
+                  <td>
+                    <div className="h-5 w-2/3 animate-pulse rounded bg-gray-200" />
+                  </td>
+                  <td>
+                    <div className="h-5 w-1/2 animate-pulse rounded bg-gray-200" />
+                  </td>
+                  <td>
+                    <div className="h-5 w-16 animate-pulse rounded bg-gray-200" />
+                  </td>
+                  <td>
+                    <div className="h-5 w-12 animate-pulse rounded bg-gray-200" />
+                  </td>
+                  <td>
+                    <div className="h-5 w-1/2 animate-pulse rounded bg-gray-200" />
+                  </td>
+                  <td>
+                    <div className="flex gap-2">
+                      <div className="h-9 w-14 animate-pulse rounded bg-gray-200" />
+                      <div className="h-9 w-16 animate-pulse rounded bg-gray-200" />
+                      <div className="h-9 w-16 animate-pulse rounded bg-gray-200" />
+                      <div className="h-9 w-20 animate-pulse rounded bg-gray-200" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
             {categories.length > 0 &&
               categories.map((category, index) => (
                 <tr key={category._id}>

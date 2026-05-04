@@ -7,6 +7,7 @@ import { withSwal } from "react-sweetalert2";
 import { v4 as uuidv4 } from "uuid"; // import uuid for unique keys
 
 function Categories({ swal }) {
+  const [showForm, setShowForm] = useState(false);
   const [editedCategory, setEditedCategory] = useState(null);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -17,18 +18,26 @@ function Categories({ swal }) {
   const [properties, setProperties] = useState([]);
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
   function fetchCategories() {
-    axios.get("/api/categories").then((result) => {
-      setCategories(result.data);
-    });
+    setIsLoading(true);
+    axios
+      .get("/api/categories")
+      .then((result) => {
+        setCategories(Array.isArray(result.data) ? result.data : []);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   function resetForm() {
+    setShowForm(false);
     setEditedCategory(null);
     setName("");
     setSlug("");
@@ -83,6 +92,7 @@ function Categories({ swal }) {
   }
 
   function editCategory(category) {
+    setShowForm(true);
     setEditedCategory(category);
     setName(category.name);
     setSlug(category.slug || "");
@@ -188,33 +198,60 @@ function Categories({ swal }) {
     );
   }
 
+  function openCreateForm() {
+    resetForm();
+    setShowForm(true);
+  }
+
   return (
     <Layout>
-      <CategoryForm
-        editedCategory={editedCategory}
-        formError={formError}
-        name={name}
-        setName={setName}
-        slug={slug}
-        setSlug={setSlug}
-        isActive={isActive}
-        setIsActive={setIsActive}
-        sortOrder={sortOrder}
-        setSortOrder={setSortOrder}
-        parentCategory={parentCategory}
-        setParentCategory={setParentCategory}
-        categories={categories}
-        properties={properties}
-        addProperty={addProperty}
-        handlePropertyNameChange={handlePropertyNameChange}
-        handlePropertyValuesChange={handlePropertyValuesChange}
-        removeProperty={removeProperty}
-        saveCategory={saveCategory}
-        resetForm={resetForm}
-        isSaving={isSaving}
-      />
-      {!editedCategory && (
+      <div className="mb-4 flex justify-stretch sm:justify-end">
+        <button
+          type="button"
+          className="btn-primary flex items-center justify-center"
+          onClick={openCreateForm}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="currentColor"
+            className="bi bi-plus"
+            viewBox="0 0 16 16"
+          >
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+          </svg>
+          Add new category
+        </button>
+      </div>
+      {(showForm || editedCategory) && (
+        <CategoryForm
+          editedCategory={editedCategory}
+          formError={formError}
+          name={name}
+          setName={setName}
+          slug={slug}
+          setSlug={setSlug}
+          isActive={isActive}
+          setIsActive={setIsActive}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          parentCategory={parentCategory}
+          setParentCategory={setParentCategory}
+          categories={categories}
+          properties={properties}
+          addProperty={addProperty}
+          handlePropertyNameChange={handlePropertyNameChange}
+          handlePropertyValuesChange={handlePropertyValuesChange}
+          removeProperty={removeProperty}
+          saveCategory={saveCategory}
+          resetForm={resetForm}
+          isSaving={isSaving}
+        />
+      )}
+      {!showForm && !editedCategory && (
         <CategoryList
+          isLoading={isLoading}
           categories={categories}
           editCategory={editCategory}
           deleteCategory={deleteCategory}
