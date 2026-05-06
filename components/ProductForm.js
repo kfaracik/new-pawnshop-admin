@@ -30,7 +30,9 @@ export default function ProductForm({
   const [price, setPrice] = useState(existingPrice || "");
   const [quantity, setQuantity] = useState(
     existingQuantity === undefined || existingQuantity === null
-      ? ""
+      ? _id
+        ? ""
+        : "1"
       : String(existingQuantity)
   );
   const [images, setImages] = useState(existingImages || []);

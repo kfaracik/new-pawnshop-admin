@@ -44,13 +44,6 @@ export default function Nav({show, onClose}) {
           </svg>
           Orders
         </Link>
-        <Link href={'/locations'} onClick={onClose} className={pathname.includes('/locations') ? activeLink : inactiveLink}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={pathname.includes('/locations') ? activeIcon : inactiveIcon}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s6.75-5.625 6.75-11.25a6.75 6.75 0 10-13.5 0C5.25 15.375 12 21 12 21z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 11.25a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-          </svg>
-          Locations
-        </Link>
         <button type="button" onClick={logout} className={inactiveLink}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
