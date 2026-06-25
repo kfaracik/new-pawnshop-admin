@@ -12,7 +12,7 @@ function getErrorMessage(payload: unknown, fallback: string) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") {
+  if (!["GET", "PUT", "PATCH"].includes(req.method || "")) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const query = new URLSearchParams();
   Object.entries(req.query).forEach(([key, value]) => {
+    if (key === "id") return;
     if (Array.isArray(value)) {
       value.forEach((item) => query.append(key, String(item)));
     } else if (value !== undefined) {
@@ -35,16 +36,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   });
 
-  const targetUrl = `${backendUrl.replace(/\/$/, "")}/api/v1/orders${
+  const orderId = typeof req.query.id === "string" ? req.query.id : "";
+  const targetUrl = `${backendUrl.replace(/\/$/, "")}/api/v1/orders${orderId ? `/${encodeURIComponent(orderId)}` : ""}${
     query.toString() ? `?${query.toString()}` : ""
   }`;
 
   try {
     const response = await fetch(targetUrl, {
-      method: "GET",
+      method: req.method === "GET" ? "GET" : "PUT",
       headers: {
         Authorization: `Bearer ${backendToken}`,
+        ...(req.method === "GET" ? {} : { "Content-Type": "application/json" }),
       },
+      body: req.method === "GET" ? undefined : JSON.stringify(req.body || {}),
     });
 
     const payload = (await response.json()) as unknown;
@@ -54,7 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    return res.status(200).json(Array.isArray(payload) ? payload : []);
+    if (req.method === "GET") {
+      return res.status(200).json(Array.isArray(payload) ? payload : []);
+    }
+
+    return res.status(200).json(payload);
   } catch (error) {
     return res.status(502).json({
       error:

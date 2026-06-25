@@ -2,14 +2,37 @@ import Layout from "@/components/Layout";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
+const ORDER_STATUS_OPTIONS = [
+  { value: "pending_payment", label: "Pending payment" },
+  { value: "paid", label: "Paid" },
+  { value: "completed", label: "Completed" },
+  { value: "canceled", label: "Canceled" },
+  { value: "failed", label: "Failed" },
+];
+
+const PAYMENT_STATUS_OPTIONS = [
+  { value: "unpaid", label: "Unpaid" },
+  { value: "pending", label: "Pending" },
+  { value: "paid", label: "Paid" },
+  { value: "failed", label: "Failed" },
+  { value: "canceled", label: "Canceled" },
+  { value: "refunded", label: "Refunded" },
+];
+
+const formatMoney = (value) =>
+  typeof value === "number" ? `${value.toFixed(2)} PLN` : "-";
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   const loadOrders = useCallback(() => {
     setIsLoading(true);
     setError("");
+    setNotice("");
     axios
       .get("/api/orders")
       .then((response) => {
@@ -25,6 +48,26 @@ export default function OrdersPage() {
       });
   }, []);
 
+  const updateOrder = useCallback(async (orderId, payload) => {
+    setUpdatingOrderId(orderId);
+    setError("");
+    setNotice("");
+
+    try {
+      const response = await axios.put(`/api/orders?id=${encodeURIComponent(orderId)}`, payload);
+      setOrders((current) =>
+        current.map((order) => (order._id === orderId ? response.data : order))
+      );
+      setNotice("Order updated.");
+    } catch (err) {
+      setError(
+        err?.response?.data?.error || err?.message || "Failed to update order."
+      );
+    } finally {
+      setUpdatingOrderId("");
+    }
+  }, []);
+
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
@@ -33,10 +76,14 @@ export default function OrdersPage() {
     <Layout>
       <h1>Orders</h1>
       {error && <p className="text-red-600 mb-2">{error}</p>}
+      {notice && <p className="text-green-700 mb-2">{notice}</p>}
       {isLoading && <p>Loading orders...</p>}
       <div className="grid gap-3 md:hidden">
         {orders.length > 0 &&
-          orders.map((order) => (
+          orders.map((order) => {
+            const isUpdating = updatingOrderId === order._id;
+
+            return (
             <article key={order._id} className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
@@ -48,9 +95,7 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 <strong className="text-sm text-gray-800">
-                  {typeof order.totalAmount === "number"
-                    ? `${order.totalAmount.toFixed(2)} PLN`
-                    : "-"}
+                  {formatMoney(order.grandTotal ?? order.totalAmount)}
                 </strong>
               </div>
               <p className={`text-sm ${order.orderStatus === "completed" ? "text-green-600" : "text-gray-600"}`}>
@@ -60,9 +105,7 @@ export default function OrdersPage() {
                 Payment: {order.paymentStatus || "unpaid"}
               </p>
               <p className="text-sm text-gray-600">
-                Delivery: {order.deliveryMethod || "-"} ({typeof order.deliveryPrice === "number"
-                  ? `${order.deliveryPrice.toFixed(2)} PLN`
-                  : "-"})
+                Delivery: {order.deliveryMethod || "-"} ({formatMoney(order.deliveryPrice)})
               </p>
               <p className="text-sm text-gray-600">
                 Method: {order.paymentMethod || "-"} / session: {order.paymentSessionStatus || "-"}
@@ -81,8 +124,45 @@ export default function OrdersPage() {
                   </p>
                 ))}
               </div>
+              <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 text-sm">
+                <label className="grid gap-1">
+                  <span className="font-medium text-gray-700">Order status</span>
+                  <select
+                    className="rounded-md border border-gray-300 p-2"
+                    value={order.orderStatus || "pending_payment"}
+                    disabled={isUpdating}
+                    onChange={(event) =>
+                      updateOrder(order._id, { orderStatus: event.target.value })
+                    }
+                  >
+                    {ORDER_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1">
+                  <span className="font-medium text-gray-700">Payment status</span>
+                  <select
+                    className="rounded-md border border-gray-300 p-2"
+                    value={order.paymentStatus || "unpaid"}
+                    disabled={isUpdating}
+                    onChange={(event) =>
+                      updateOrder(order._id, { paymentStatus: event.target.value })
+                    }
+                  >
+                    {PAYMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </article>
-          ))}
+            );
+          })}
         {orders.length === 0 && !isLoading && (
           <div className="rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-500 shadow-sm">
             No orders found.
@@ -105,14 +185,43 @@ export default function OrdersPage() {
           </thead>
           <tbody>
             {orders.length > 0 &&
-              orders.map((order) => (
+              orders.map((order) => {
+                const isUpdating = updatingOrderId === order._id;
+
+                return (
                 <tr key={order._id}>
                   <td>{new Date(order.createdAt).toLocaleString()}</td>
-                  <td className={order.orderStatus === "completed" ? "text-green-600" : ""}>
-                    {order.orderStatus || "pending_payment"}
+                  <td>
+                    <select
+                      className="rounded-md border border-gray-300 p-2 text-sm"
+                      value={order.orderStatus || "pending_payment"}
+                      disabled={isUpdating}
+                      onChange={(event) =>
+                        updateOrder(order._id, { orderStatus: event.target.value })
+                      }
+                    >
+                      {ORDER_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </td>
-                  <td className={order.paymentStatus === "paid" ? "text-green-600" : ""}>
-                    {order.paymentStatus || "unpaid"}
+                  <td>
+                    <select
+                      className="rounded-md border border-gray-300 p-2 text-sm"
+                      value={order.paymentStatus || "unpaid"}
+                      disabled={isUpdating}
+                      onChange={(event) =>
+                        updateOrder(order._id, { paymentStatus: event.target.value })
+                      }
+                    >
+                      {PAYMENT_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td>
                     {order.customer?.name} {order.customer?.email}
@@ -125,7 +234,7 @@ export default function OrdersPage() {
                     {order.deliveryMethod || "-"}
                     <br />
                     {typeof order.deliveryPrice === "number"
-                      ? `${order.deliveryPrice.toFixed(2)} PLN`
+                      ? formatMoney(order.deliveryPrice)
                       : "-"}
                     <br />
                     {order.deliveryEtaLabel || "-"}
@@ -144,14 +253,11 @@ export default function OrdersPage() {
                     ))}
                   </td>
                   <td>
-                    {typeof order.grandTotal === "number"
-                      ? `${order.grandTotal.toFixed(2)} PLN`
-                      : typeof order.totalAmount === "number"
-                        ? `${order.totalAmount.toFixed(2)} PLN`
-                      : "-"}
+                    {formatMoney(order.grandTotal ?? order.totalAmount)}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             {orders.length === 0 && !isLoading && (
               <tr>
                 <td colSpan={8}>No orders found.</td>
