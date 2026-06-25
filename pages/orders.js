@@ -3,24 +3,38 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
 const ORDER_STATUS_OPTIONS = [
-  { value: "pending_payment", label: "Pending payment" },
-  { value: "paid", label: "Paid" },
-  { value: "completed", label: "Completed" },
-  { value: "canceled", label: "Canceled" },
-  { value: "failed", label: "Failed" },
+  { value: "pending_payment", label: "Oczekuje na płatność" },
+  { value: "paid", label: "Opłacone" },
+  { value: "completed", label: "Zrealizowane" },
+  { value: "canceled", label: "Anulowane" },
+  { value: "failed", label: "Nieudane" },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
-  { value: "unpaid", label: "Unpaid" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-  { value: "failed", label: "Failed" },
-  { value: "canceled", label: "Canceled" },
-  { value: "refunded", label: "Refunded" },
+  { value: "unpaid", label: "Nieopłacone" },
+  { value: "pending", label: "W trakcie" },
+  { value: "paid", label: "Opłacone" },
+  { value: "failed", label: "Nieudane" },
+  { value: "canceled", label: "Anulowane" },
+  { value: "refunded", label: "Zwrócone" },
 ];
 
 const formatMoney = (value) =>
   typeof value === "number" ? `${value.toFixed(2)} PLN` : "-";
+
+const getOptionLabel = (options, value, fallback = "-") =>
+  options.find((option) => option.value === value)?.label || value || fallback;
+
+const PAYMENT_METHOD_LABELS = {
+  bank_transfer: "Przelew tradycyjny",
+  stripe_card: "Płatność online Stripe",
+};
+
+const DELIVERY_METHOD_LABELS = {
+  courier_standard: "Kurier standard",
+  parcel_locker: "Paczkomat / automat odbioru",
+  store_pickup: "Odbiór osobisty",
+};
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -99,16 +113,16 @@ export default function OrdersPage() {
                 </strong>
               </div>
               <p className={`text-sm ${order.orderStatus === "completed" ? "text-green-600" : "text-gray-600"}`}>
-                Order: {order.orderStatus || "pending_payment"}
+                Zamówienie: {getOptionLabel(ORDER_STATUS_OPTIONS, order.orderStatus, "Oczekuje na płatność")}
               </p>
               <p className={`text-sm ${order.paymentStatus === "paid" ? "text-green-600" : "text-gray-600"}`}>
-                Payment: {order.paymentStatus || "unpaid"}
+                Płatność: {getOptionLabel(PAYMENT_STATUS_OPTIONS, order.paymentStatus, "Nieopłacone")}
               </p>
               <p className="text-sm text-gray-600">
-                Delivery: {order.deliveryMethod || "-"} ({formatMoney(order.deliveryPrice)})
+                Dostawa: {DELIVERY_METHOD_LABELS[order.deliveryMethod] || order.deliveryMethod || "-"} ({formatMoney(order.deliveryPrice)})
               </p>
               <p className="text-sm text-gray-600">
-                Method: {order.paymentMethod || "-"} / session: {order.paymentSessionStatus || "-"}
+                Metoda: {PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod || "-"} / checkout: {order.paymentSessionStatus || "-"}
               </p>
               <div className="mt-2 text-sm text-gray-600">
                 <p>{order.customer?.email}</p>
@@ -126,7 +140,7 @@ export default function OrdersPage() {
               </div>
               <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 text-sm">
                 <label className="grid gap-1">
-                  <span className="font-medium text-gray-700">Order status</span>
+                  <span className="font-medium text-gray-700">Status zamówienia</span>
                   <select
                     className="rounded-md border border-gray-300 p-2"
                     value={order.orderStatus || "pending_payment"}
@@ -143,7 +157,7 @@ export default function OrdersPage() {
                   </select>
                 </label>
                 <label className="grid gap-1">
-                  <span className="font-medium text-gray-700">Payment status</span>
+                  <span className="font-medium text-gray-700">Status płatności</span>
                   <select
                     className="rounded-md border border-gray-300 p-2"
                     value={order.paymentStatus || "unpaid"}
@@ -174,8 +188,8 @@ export default function OrdersPage() {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Order status</th>
-              <th>Payment status</th>
+              <th>Status zamówienia</th>
+              <th>Status płatności</th>
               <th>Recipient</th>
               <th>Delivery</th>
               <th>Payment method</th>
@@ -231,7 +245,7 @@ export default function OrdersPage() {
                     {order.customer?.streetAddress}
                   </td>
                   <td>
-                    {order.deliveryMethod || "-"}
+                    {DELIVERY_METHOD_LABELS[order.deliveryMethod] || order.deliveryMethod || "-"}
                     <br />
                     {typeof order.deliveryPrice === "number"
                       ? formatMoney(order.deliveryPrice)
@@ -240,7 +254,7 @@ export default function OrdersPage() {
                     {order.deliveryEtaLabel || "-"}
                   </td>
                   <td>
-                    {order.paymentMethod || "-"}
+                    {PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod || "-"}
                     <br />
                     {order.paymentSessionStatus || "-"}
                   </td>
