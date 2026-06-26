@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  admin:
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_EMAILS: admin@example.com
+      NEXTAUTH_URL: http://localhost:3000
+      SECRET: ci-secret
+      GOOGLE_ID: ci-google-id
+      GOOGLE_SECRET: ci-google-secret
+      MONGODB_URI: mongodb://127.0.0.1:27017/new-pawnshop-ci
+      AUCTION_BACKEND_URL: http://localhost:8888
+      AUCTION_ADMIN_TOKEN: ci-service-token
+      R2_ENDPOINT: http://localhost:9000
+      R2_BUCKET: ci-uploads
+      R2_ACCESS_KEY_ID: ci-access-key
+      R2_SECRET_ACCESS_KEY: ci-secret-key
+      R2_PUBLIC_BASE_URL: https://cdn.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --omit=dev
