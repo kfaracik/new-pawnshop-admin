@@ -25,6 +25,8 @@ describe("admin product helpers", () => {
         images: ["a"],
         category: "cat-1",
         properties: { brand: "X" },
+        availabilityMode: "online_only",
+        availableLocations: [],
       }).title
     ).toBe("Ring");
   });

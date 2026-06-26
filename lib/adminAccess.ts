@@ -1,15 +1,18 @@
-const DEFAULT_ADMIN_EMAILS = [
-  "larkfreeme70.55@gmail.com",
-  "krzysztoffaracik@gmail.com",
-];
-
 const parseAdminEmails = () => {
   const fromEnv = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
 
-  return fromEnv.length > 0 ? fromEnv : DEFAULT_ADMIN_EMAILS;
+  if (fromEnv.length > 0) {
+    return fromEnv;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Missing required ADMIN_EMAILS environment variable.");
+  }
+
+  return [];
 };
 
 export const adminEmails = parseAdminEmails();
