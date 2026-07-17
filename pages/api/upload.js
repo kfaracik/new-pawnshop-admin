@@ -25,7 +25,7 @@ const getStorageConfig = () => {
     process.env.S3_PUBLIC_BASE_URL || process.env.R2_PUBLIC_BASE_URL;
 
   if (!endpoint || !bucket || !accessKeyId || !secretAccessKey || !publicBaseUrl) {
-    throw new Error("Missing S3/R2 upload configuration.");
+    return null;
   }
 
   return {
@@ -42,6 +42,10 @@ const getStorageConfig = () => {
 
 const getS3Client = () => {
   const config = getStorageConfig();
+
+  if (!config) {
+    return { config: null, client: null };
+  }
 
   return {
     config,
@@ -159,6 +163,11 @@ export default async function handle(req, res) {
         return res.status(400).json({
           error: "Only JPG, PNG, WEBP and GIF images are allowed.",
         });
+      }
+
+      if (!client || !config) {
+        links.push(`data:${contentType};base64,${fileBuffer.toString("base64")}`);
+        continue;
       }
 
       const key = buildObjectKey(contentType);

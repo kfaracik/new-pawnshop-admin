@@ -11,15 +11,24 @@ export default function Home() {
         <h2>
           Hello, <b>{session?.user?.name}</b>
         </h2>
-        <div className="flex bg-gray-300 gap-1 text-black rounded-lg overflow-hidden">
-          <Image
-            src={session?.user?.image}
-            alt={session?.user?.name ? `Avatar użytkownika ${session.user.name}` : "Avatar użytkownika"}
-            className="w-6 h-6"
-            width={24}
-            height={24}
-            unoptimized
-          />
+        <div className="flex items-center bg-gray-300 gap-1 text-black rounded-lg overflow-hidden">
+          {session?.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt={session?.user?.name ? `Avatar użytkownika ${session.user.name}` : "Avatar użytkownika"}
+              className="w-6 h-6"
+              width={24}
+              height={24}
+              unoptimized
+            />
+          ) : (
+            <span
+              className="flex items-center justify-center w-6 h-6 bg-gray-500 text-white text-xs uppercase"
+              aria-hidden="true"
+            >
+              {(session?.user?.name || session?.user?.email || "?").charAt(0)}
+            </span>
+          )}
           <span className="px-2">{session?.user?.name}</span>
         </div>
       </div>

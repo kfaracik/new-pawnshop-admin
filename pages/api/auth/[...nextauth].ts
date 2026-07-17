@@ -1,24 +1,57 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import NextAuth, { getServerSession, type NextAuthOptions } from "next-auth";
+import NextAuth, {
+  getServerSession,
+  type NextAuthOptions,
+} from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import { adminEmails, isAdminEmail } from "@/lib/adminAccess";
 import clientPromise from "@/lib/mongodb";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const providers: NextAuthOptions["providers"] = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_ID || "",
+    clientSecret: process.env.GOOGLE_SECRET || "",
+    authorization: {
+      params: {
+        prompt: "select_account",
+      },
+    },
+  }),
+];
+
+if (!isProduction) {
+  providers.push(
+    CredentialsProvider({
+      id: "dev-login",
+      name: "Local admin",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: (credentials) => {
+        const email = credentials?.email?.trim().toLowerCase();
+        const password = credentials?.password || "";
+        const devPassword = process.env.DEV_ADMIN_PASSWORD || "admin";
+
+        if (!email || !isAdminEmail(email) || password !== devPassword) {
+          return null;
+        }
+
+        return { id: email, email, name: email.split("@")[0] };
+      },
+    })
+  );
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.SECRET,
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID || "",
-      clientSecret: process.env.GOOGLE_SECRET || "",
-      authorization: {
-        params: {
-          prompt: "select_account",
-        },
-      },
-    }),
-  ],
+  providers,
   adapter: MongoDBAdapter(clientPromise),
+  session: { strategy: isProduction ? "database" : "jwt" },
   callbacks: {
     signIn: ({ user }) => {
       return isAdminEmail(user.email);
