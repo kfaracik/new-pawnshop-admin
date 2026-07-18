@@ -1,3 +1,5 @@
+import { getStaffRole } from "@/lib/staff";
+
 export type Role = "admin" | "employee";
 
 const parseEmails = (value: string | undefined) =>
@@ -20,26 +22,41 @@ const parseAdminEmails = () => {
   return [];
 };
 
+// Bootstrap owners from env. These are always admins and cannot be removed from
+// the team UI — they exist so the organisation can never lock itself out.
 export const adminEmails = parseAdminEmails();
 
-// Read-only staff. Excludes anyone already listed as a full admin so an email
-// can never be both roles at once (admin always wins).
+// Bootstrap read-only staff from env (optional). Excludes bootstrap admins.
 export const employeeEmails = parseEmails(process.env.EMPLOYEE_EMAILS).filter(
   (email) => !adminEmails.includes(email)
 );
 
-export const isAdminEmail = (email?: string | null) =>
+export const isBootstrapAdmin = (email?: string | null) =>
   Boolean(email && adminEmails.includes(email.toLowerCase()));
 
-export const isEmployeeEmail = (email?: string | null) =>
+export const isBootstrapEmployee = (email?: string | null) =>
   Boolean(email && employeeEmails.includes(email.toLowerCase()));
 
-// Anyone allowed to sign in at all (admin OR employee).
-export const isAllowedEmail = (email?: string | null) =>
-  isAdminEmail(email) || isEmployeeEmail(email);
+export const isBootstrapEmail = (email?: string | null) =>
+  isBootstrapAdmin(email) || isBootstrapEmployee(email);
 
-export const getUserRole = (email?: string | null): Role | null => {
-  if (isAdminEmail(email)) return "admin";
-  if (isEmployeeEmail(email)) return "employee";
+// Resolve a user's effective role. Precedence:
+//   env bootstrap admin  >  DB staff member  >  env bootstrap employee  >  none
+export const resolveUserRole = async (
+  email?: string | null
+): Promise<Role | null> => {
+  if (!email) return null;
+  const normalized = email.toLowerCase();
+
+  if (isBootstrapAdmin(normalized)) return "admin";
+
+  const dbRole = await getStaffRole(normalized);
+  if (dbRole) return dbRole;
+
+  if (isBootstrapEmployee(normalized)) return "employee";
+
   return null;
 };
+
+export const isAllowedEmail = async (email?: string | null) =>
+  (await resolveUserRole(email)) !== null;

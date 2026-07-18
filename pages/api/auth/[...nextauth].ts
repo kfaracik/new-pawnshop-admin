@@ -6,11 +6,7 @@ import NextAuth, {
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
-import {
-  adminEmails,
-  getUserRole,
-  isAllowedEmail,
-} from "@/lib/adminAccess";
+import { isAllowedEmail, resolveUserRole } from "@/lib/adminAccess";
 import clientPromise from "@/lib/mongodb";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -42,11 +38,11 @@ if (devLoginEnabled) {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: (credentials) => {
+      authorize: async (credentials) => {
         const email = credentials?.email?.trim().toLowerCase();
         const password = credentials?.password || "";
 
-        if (!email || !isAllowedEmail(email) || password !== devPassword) {
+        if (!email || password !== devPassword || !(await isAllowedEmail(email))) {
           return null;
         }
 
@@ -65,9 +61,9 @@ export const authOptions: NextAuthOptions = {
     signIn: ({ user }) => {
       return isAllowedEmail(user.email);
     },
-    session: ({ session }) => {
+    session: async ({ session }) => {
       if (session.user) {
-        session.user.role = getUserRole(session.user.email) ?? undefined;
+        session.user.role = (await resolveUserRole(session.user.email)) ?? undefined;
       }
       return session;
     },
@@ -82,8 +78,9 @@ export async function isAdminRequest(
 ): Promise<boolean> {
   const session = await getServerSession(req, res, authOptions);
   const email = session?.user?.email?.toLowerCase();
+  const role = await resolveUserRole(email);
 
-  if (!email || !adminEmails.includes(email)) {
+  if (!email || role !== "admin") {
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
