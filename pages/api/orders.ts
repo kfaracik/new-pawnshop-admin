@@ -26,9 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  const ALLOWED_QUERY_KEYS = new Set([
+    "page",
+    "limit",
+    "status",
+    "orderStatus",
+    "paymentStatus",
+    "sort",
+    "search",
+  ]);
   const query = new URLSearchParams();
   Object.entries(req.query).forEach(([key, value]) => {
-    if (key === "id") return;
+    if (!ALLOWED_QUERY_KEYS.has(key)) return;
     if (Array.isArray(value)) {
       value.forEach((item) => query.append(key, String(item)));
     } else if (value !== undefined) {
