@@ -4,10 +4,10 @@ import {signOut} from "next-auth/react";
 import Logo from "@/components/Logo";
 
 export default function Nav({show, onClose}) {
-  const inactiveLink = 'flex gap-2 p-2 md:p-1 rounded-md items-center min-h-11';
-  const activeLink = inactiveLink+' bg-highlight text-black';
+  const inactiveLink = 'flex gap-2 p-2 md:p-2 rounded-lg items-center min-h-11 text-gray-300 hover:bg-white/5 hover:text-white transition-colors';
+  const activeLink = 'flex gap-2 p-2 md:p-2 rounded-lg items-center min-h-11 bg-white/10 text-gold font-semibold';
   const inactiveIcon = 'w-6 h-6 shrink-0';
-  const activeIcon = inactiveIcon + ' text-primary';
+  const activeIcon = inactiveIcon + ' text-gold';
   const router = useRouter();
   const {pathname} = router;
   async function logout() {
@@ -15,7 +15,7 @@ export default function Nav({show, onClose}) {
     await signOut();
   }
   return (
-    <aside aria-label="Nawigacja panelu administratora" className={(show?'left-0':'-left-full')+" top-0 text-gray-500 p-4 fixed w-[85vw] max-w-xs bg-bgGray h-full md:static md:w-auto transition-all z-50 shadow-xl md:shadow-none"}>
+    <aside aria-label="Nawigacja panelu administratora" className={(show?'left-0':'-left-full')+" top-0 text-gray-300 p-4 fixed w-[85vw] max-w-xs bg-ink h-full md:static md:w-auto md:rounded-2xl md:m-2 transition-all z-50 shadow-xl md:shadow-none"}>
       <div className="mb-4 mr-4">
         <Logo />
       </div>

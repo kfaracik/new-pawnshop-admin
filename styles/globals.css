@@ -1,6 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
 
 img {
   max-height: 100%;
@@ -16,7 +21,7 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  @apply border-blue-900;
+  @apply border-gold;
 }
 
 button:focus-visible,
@@ -24,7 +29,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #1d4ed8;
+  outline: 3px solid #C9A227;
   outline-offset: 2px;
 }
 
@@ -44,7 +49,7 @@ label {
 }
 
 .btn-primary {
-  @apply bg-blue-900 text-white;
+  @apply bg-primary text-black font-semibold;
 }
 
 .btn-default {
@@ -77,8 +82,8 @@ table.basic a {
   left: 16px;
   top: -48px;
   z-index: 1000;
-  background: #1d4ed8;
-  color: white;
+  background: #0F0F0F;
+  color: #E1C76A;
   padding: 10px 14px;
   border-radius: 8px;
   font-weight: 700;

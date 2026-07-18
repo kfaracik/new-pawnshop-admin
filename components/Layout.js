@@ -9,14 +9,20 @@ export default function Layout({ children }) {
 
   if (!session) {
     return (
-      <div className="bg-bgGray w-screen h-screen flex items-center">
-        <div className="text-center w-full">
+      <div className="bg-ink w-screen h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+          <div className="mb-6 flex justify-center">
+            <Logo />
+          </div>
+          <p className="mb-6 text-sm text-gray-400">
+            Zaloguj się, aby zarządzać katalogiem, kategoriami i zamówieniami.
+          </p>
           <button
             type="button"
-            onClick={() => signIn("google")}
-            className="bg-white p-2 px-4 rounded-lg"
+            onClick={() => signIn()}
+            className="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-black transition-colors hover:bg-gold-light"
           >
-            Login with Google
+            Zaloguj się
           </button>
         </div>
       </div>
@@ -28,7 +34,7 @@ export default function Layout({ children }) {
       <a className="skip-link" href="#main-content">
         Przejdź do treści
       </a>
-      <header className="flex items-center p-4 md:hidden">
+      <header className="flex items-center p-4 md:hidden bg-ink text-white">
         <button
           type="button"
           aria-label={showNav ? "Zamknij menu nawigacji" : "Otwórz menu nawigacji"}
@@ -56,8 +62,8 @@ export default function Layout({ children }) {
         <Nav show={showNav} onClose={() => setShowNav(false)} />
         <main id="main-content" className="flex-grow p-3 sm:p-4">{children}</main>
       </div>
-      <footer className="bg-gray-800 text-white py-4 text-center mt-auto">
-        <p>Copyright &copy; 2024 - All Rights Reserved</p>
+      <footer className="bg-ink text-gray-400 py-4 text-center mt-auto text-sm">
+        <p>Nowy Lombard Admin &copy; 2026 — panel zarządzania</p>
       </footer>
     </div>
   );
