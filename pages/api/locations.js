@@ -22,7 +22,7 @@ const toObjectId = (value) => {
 
 export default async function handle(req, res) {
   await mongooseConnect();
-  await isAdminRequest(req, res);
+  if (!(await isAdminRequest(req, res))) return;
 
   if (req.method === "GET") {
     if (req.query?.id) {

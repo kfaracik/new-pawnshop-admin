@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  await isAdminRequest(req, res);
+  if (!(await isAdminRequest(req, res))) return;
 
   const backendUrl = process.env.AUCTION_BACKEND_URL;
   const backendToken = process.env.AUCTION_ADMIN_TOKEN;

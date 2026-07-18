@@ -58,7 +58,7 @@ function normalizeAdminCategoryShape(categories: BackendCategory[]) {
 }
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-  await isAdminRequest(req, res);
+  if (!(await isAdminRequest(req, res))) return;
 
   const backendUrl = process.env.AUCTION_BACKEND_URL;
   const backendToken = process.env.AUCTION_ADMIN_TOKEN;

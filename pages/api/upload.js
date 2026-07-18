@@ -123,7 +123,7 @@ export default async function handle(req, res) {
 
   try {
     await mongooseConnect();
-    await isAdminRequest(req, res);
+    if (!(await isAdminRequest(req, res))) return;
 
     const form = new multiparty.Form({
       maxFilesSize: MAX_FILE_SIZE_BYTES * MAX_FILES,
@@ -192,10 +192,6 @@ export default async function handle(req, res) {
     }
     return res.json({ links });
   } catch (error) {
-    if (error?.message === "not an admin") {
-      return;
-    }
-
     const message =
       error?.message === "Missing S3/R2 upload configuration."
         ? "Missing S3/R2 upload configuration."

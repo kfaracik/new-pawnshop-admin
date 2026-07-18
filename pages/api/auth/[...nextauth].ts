@@ -66,12 +66,17 @@ export const authOptions: NextAuthOptions = {
 
 export default NextAuth(authOptions);
 
-export async function isAdminRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function isAdminRequest(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<boolean> {
   const session = await getServerSession(req, res, authOptions);
   const email = session?.user?.email?.toLowerCase();
 
   if (!email || !adminEmails.includes(email)) {
     res.status(401).json({ error: "Unauthorized" });
-    throw new Error("not an admin");
+    return false;
   }
+
+  return true;
 }

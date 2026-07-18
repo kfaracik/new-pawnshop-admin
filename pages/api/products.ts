@@ -102,7 +102,7 @@ function normalizeAdminProductShape(product: unknown) {
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
-  await isAdminRequest(req, res);
+  if (!(await isAdminRequest(req, res))) return;
 
   const backendUrl = process.env.AUCTION_BACKEND_URL;
   const backendToken = process.env.AUCTION_ADMIN_TOKEN;
