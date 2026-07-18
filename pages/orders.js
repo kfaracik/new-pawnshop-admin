@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 
 const ORDER_STATUS_OPTIONS = [
@@ -37,6 +38,8 @@ const DELIVERY_METHOD_LABELS = {
 };
 
 export default function OrdersPage() {
+  const { data: session } = useSession();
+  const canEdit = session?.user?.role === "admin";
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState("");
@@ -144,7 +147,7 @@ export default function OrdersPage() {
                   <select
                     className="rounded-md border border-gray-300 p-2"
                     value={order.orderStatus || "pending_payment"}
-                    disabled={isUpdating}
+                    disabled={isUpdating || !canEdit}
                     onChange={(event) =>
                       updateOrder(order._id, { orderStatus: event.target.value })
                     }
@@ -161,7 +164,7 @@ export default function OrdersPage() {
                   <select
                     className="rounded-md border border-gray-300 p-2"
                     value={order.paymentStatus || "unpaid"}
-                    disabled={isUpdating}
+                    disabled={isUpdating || !canEdit}
                     onChange={(event) =>
                       updateOrder(order._id, { paymentStatus: event.target.value })
                     }
@@ -209,7 +212,7 @@ export default function OrdersPage() {
                     <select
                       className="rounded-md border border-gray-300 p-2 text-sm"
                       value={order.orderStatus || "pending_payment"}
-                      disabled={isUpdating}
+                      disabled={isUpdating || !canEdit}
                       onChange={(event) =>
                         updateOrder(order._id, { orderStatus: event.target.value })
                       }
@@ -225,7 +228,7 @@ export default function OrdersPage() {
                     <select
                       className="rounded-md border border-gray-300 p-2 text-sm"
                       value={order.paymentStatus || "unpaid"}
-                      disabled={isUpdating}
+                      disabled={isUpdating || !canEdit}
                       onChange={(event) =>
                         updateOrder(order._id, { paymentStatus: event.target.value })
                       }

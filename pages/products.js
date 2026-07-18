@@ -1,9 +1,12 @@
 import Layout from "@/components/Layout";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 
 export default function Products() {
+  const { data: session } = useSession();
+  const canEdit = session?.user?.role === "admin";
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
@@ -20,21 +23,23 @@ export default function Products() {
 
   return (
     <Layout>
-      <div className="mb-4 flex justify-stretch sm:justify-end">
-        <Link className="btn-primary flex items-center" href={"/products/new"}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            className="bi bi-plus"
-            viewBox="0 0 16 16"
-          >
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-          </svg>
-          Add new product
-        </Link>
-      </div>
+      {canEdit && (
+        <div className="mb-4 flex justify-stretch sm:justify-end">
+          <Link className="btn-primary flex items-center" href={"/products/new"}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              className="bi bi-plus"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+            Add new product
+          </Link>
+        </div>
+      )}
       <div className="grid gap-3 md:hidden">
         {isLoading &&
           Array.from({ length: 5 }).map((_, index) => (
@@ -52,20 +57,22 @@ export default function Products() {
         {products.map((product) => (
           <div key={product._id} className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
             <h2 className="mb-3 text-base font-semibold text-gray-800">{product.title}</h2>
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                className="btn-default justify-center"
-                href={"/products/edit/" + product._id}
-              >
-                Edit
-              </Link>
-              <Link
-                className="btn-red justify-center"
-                href={"/products/delete/" + product._id}
-              >
-                Delete
-              </Link>
-            </div>
+            {canEdit && (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  className="btn-default justify-center"
+                  href={"/products/edit/" + product._id}
+                >
+                  Edit
+                </Link>
+                <Link
+                  className="btn-red justify-center"
+                  href={"/products/delete/" + product._id}
+                >
+                  Delete
+                </Link>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -96,6 +103,8 @@ export default function Products() {
               <tr key={product._id}>
                 <td>{product.title}</td>
                 <td>
+                  {canEdit && (
+                  <>
                   <Link
                     className="btn-default"
                     href={"/products/edit/" + product._id}
@@ -136,6 +145,8 @@ export default function Products() {
                     </svg>
                     Delete
                   </Link>
+                  </>
+                  )}
                 </td>
               </tr>
             ))}

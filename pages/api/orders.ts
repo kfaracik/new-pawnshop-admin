@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
+import { authorize } from "@/lib/authz";
+import { auditOnFinish } from "@/lib/audit";
 
 function getErrorMessage(payload: unknown, fallback: string) {
   if (!payload) return fallback;
@@ -16,7 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!(await isAdminRequest(req, res))) return;
+  const actor = await authorize(req, res);
+  if (!actor) return;
+  auditOnFinish(req, res, actor);
 
   const backendUrl = process.env.AUCTION_BACKEND_URL;
   const backendToken = process.env.AUCTION_ADMIN_TOKEN;

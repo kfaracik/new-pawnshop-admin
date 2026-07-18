@@ -2,11 +2,14 @@ import Layout from "@/components/Layout";
 import CategoryForm from "@/components/CategoryForm";
 import CategoryList from "@/components/CategoryList";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 import { withSwal } from "react-sweetalert2";
 import { v4 as uuidv4 } from "uuid"; // import uuid for unique keys
 
 function Categories({ swal }) {
+  const { data: session } = useSession();
+  const canEdit = session?.user?.role === "admin";
   const [showForm, setShowForm] = useState(false);
   const [editedCategory, setEditedCategory] = useState(null);
   const [name, setName] = useState("");
@@ -205,25 +208,27 @@ function Categories({ swal }) {
 
   return (
     <Layout>
-      <div className="mb-4 flex justify-stretch sm:justify-end">
-        <button
-          type="button"
-          className="btn-primary flex items-center justify-center"
-          onClick={openCreateForm}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            className="bi bi-plus"
-            viewBox="0 0 16 16"
+      {canEdit && (
+        <div className="mb-4 flex justify-stretch sm:justify-end">
+          <button
+            type="button"
+            className="btn-primary flex items-center justify-center"
+            onClick={openCreateForm}
           >
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-          </svg>
-          Add new category
-        </button>
-      </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              className="bi bi-plus"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+            Add new category
+          </button>
+        </div>
+      )}
       {(showForm || editedCategory) && (
         <CategoryForm
           editedCategory={editedCategory}
@@ -256,6 +261,7 @@ function Categories({ swal }) {
           editCategory={editCategory}
           deleteCategory={deleteCategory}
           moveCategory={moveCategory}
+          canEdit={canEdit}
         />
       )}
     </Layout>

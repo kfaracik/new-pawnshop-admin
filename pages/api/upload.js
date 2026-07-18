@@ -3,7 +3,8 @@ import fs from "fs/promises";
 import crypto from "crypto";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mongooseConnect } from "@/lib/mongoose";
-import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
+import { authorize } from "@/lib/authz";
+import { auditOnFinish } from "@/lib/audit";
 
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 const MAX_FILES = 8;
@@ -123,7 +124,9 @@ export default async function handle(req, res) {
 
   try {
     await mongooseConnect();
-    if (!(await isAdminRequest(req, res))) return;
+    const actor = await authorize(req, res);
+    if (!actor) return;
+    auditOnFinish(req, res, actor);
 
     const form = new multiparty.Form({
       maxFilesSize: MAX_FILE_SIZE_BYTES * MAX_FILES,

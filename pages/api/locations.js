@@ -1,6 +1,7 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import { Location } from "@/models/Location";
-import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
+import { authorize } from "@/lib/authz";
+import { auditOnFinish } from "@/lib/audit";
 
 const normalizePayload = (body = {}) => ({
   name: typeof body.name === "string" ? body.name.trim() : "",
@@ -22,7 +23,9 @@ const toObjectId = (value) => {
 
 export default async function handle(req, res) {
   await mongooseConnect();
-  if (!(await isAdminRequest(req, res))) return;
+  const actor = await authorize(req, res);
+  if (!actor) return;
+  auditOnFinish(req, res, actor);
 
   if (req.method === "GET") {
     if (req.query?.id) {

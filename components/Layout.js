@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 export default function Layout({ children }) {
   const [showNav, setShowNav] = useState(false);
   const { data: session, status } = useSession();
+  const isEmployee = session?.user?.role === "employee";
 
   if (!session) {
     return (
@@ -60,7 +61,18 @@ export default function Layout({ children }) {
       </header>
       <div className="flex flex-grow">
         <Nav show={showNav} onClose={() => setShowNav(false)} />
-        <main id="main-content" className="flex-grow p-3 sm:p-4">{children}</main>
+        <main id="main-content" className="flex-grow p-3 sm:p-4">
+          {isEmployee && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 0h10.5a1.5 1.5 0 011.5 1.5v6a1.5 1.5 0 01-1.5 1.5H6.75a1.5 1.5 0 01-1.5-1.5v-6a1.5 1.5 0 011.5-1.5z" />
+              </svg>
+              Konto pracownika — dostęp tylko do wglądu. Nie możesz dodawać, zmieniać
+              ani usuwać danych.
+            </div>
+          )}
+          {children}
+        </main>
       </div>
       <footer className="bg-ink text-gray-400 py-4 text-center mt-auto text-sm">
         <p>Nowy Lombard Admin &copy; 2026 — panel zarządzania</p>

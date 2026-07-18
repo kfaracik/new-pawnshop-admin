@@ -4,6 +4,7 @@ function CategoryList({
   editCategory,
   deleteCategory,
   moveCategory,
+  canEdit = true,
 }) {
   return (
     <>
@@ -46,38 +47,40 @@ function CategoryList({
               <p className="text-sm text-gray-500">
                 Parent: {category?.parent?.name || "-"}
               </p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => moveCategory(index, "up")}
-                  className="btn-default"
-                  type="button"
-                  disabled={index === 0}
-                >
-                  Up
-                </button>
-                <button
-                  onClick={() => moveCategory(index, "down")}
-                  className="btn-default"
-                  type="button"
-                  disabled={index === categories.length - 1}
-                >
-                  Down
-                </button>
-                <button
-                  onClick={() => editCategory(category)}
-                  className="btn-default"
-                  type="button"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteCategory(category)}
-                  className="btn-red"
-                  type="button"
-                >
-                  Delete
-                </button>
-              </div>
+              {canEdit && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => moveCategory(index, "up")}
+                    className="btn-default"
+                    type="button"
+                    disabled={index === 0}
+                  >
+                    Up
+                  </button>
+                  <button
+                    onClick={() => moveCategory(index, "down")}
+                    className="btn-default"
+                    type="button"
+                    disabled={index === categories.length - 1}
+                  >
+                    Down
+                  </button>
+                  <button
+                    onClick={() => editCategory(category)}
+                    className="btn-default"
+                    type="button"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteCategory(category)}
+                    className="btn-red"
+                    type="button"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
       </div>
@@ -131,36 +134,40 @@ function CategoryList({
                   <td>{category.sortOrder ?? index}</td>
                   <td>{category?.parent?.name}</td>
                   <td>
-                    <button
-                      onClick={() => moveCategory(index, "up")}
-                      className="btn-default mr-1"
-                      type="button"
-                      disabled={index === 0}
-                    >
-                      Up
-                    </button>
-                    <button
-                      onClick={() => moveCategory(index, "down")}
-                      className="btn-default mr-1"
-                      type="button"
-                      disabled={index === categories.length - 1}
-                    >
-                      Down
-                    </button>
-                    <button
-                      onClick={() => editCategory(category)}
-                      className="btn-default mr-1"
-                      type="button"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteCategory(category)}
-                      className="btn-red"
-                      type="button"
-                    >
-                      Delete
-                    </button>
+                    {canEdit && (
+                      <>
+                        <button
+                          onClick={() => moveCategory(index, "up")}
+                          className="btn-default mr-1"
+                          type="button"
+                          disabled={index === 0}
+                        >
+                          Up
+                        </button>
+                        <button
+                          onClick={() => moveCategory(index, "down")}
+                          className="btn-default mr-1"
+                          type="button"
+                          disabled={index === categories.length - 1}
+                        >
+                          Down
+                        </button>
+                        <button
+                          onClick={() => editCategory(category)}
+                          className="btn-default mr-1"
+                          type="button"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteCategory(category)}
+                          className="btn-red"
+                          type="button"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

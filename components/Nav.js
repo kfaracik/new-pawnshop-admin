@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {useRouter} from "next/router";
-import {signOut} from "next-auth/react";
+import {signOut, useSession} from "next-auth/react";
 import Logo from "@/components/Logo";
 
 export default function Nav({show, onClose}) {
@@ -10,6 +10,8 @@ export default function Nav({show, onClose}) {
   const activeIcon = inactiveIcon + ' text-gold';
   const router = useRouter();
   const {pathname} = router;
+  const {data: session} = useSession();
+  const isAdmin = session?.user?.role === 'admin';
   async function logout() {
     await router.push('/');
     await signOut();
@@ -44,6 +46,22 @@ export default function Nav({show, onClose}) {
           </svg>
           Orders
         </Link>
+        {isAdmin && (
+          <Link href={'/audit'} onClick={onClose} className={pathname.includes('/audit') ? activeLink : inactiveLink}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={pathname.includes('/audit') ? activeIcon : inactiveIcon}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Historia
+          </Link>
+        )}
+        {session?.user?.email && (
+          <div className="mt-1 px-2 py-1 text-xs text-gray-500">
+            {session.user.email}
+            <span className="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-gold">
+              {isAdmin ? 'Administrator' : 'Pracownik'}
+            </span>
+          </div>
+        )}
         <button type="button" onClick={logout} className={inactiveLink}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />

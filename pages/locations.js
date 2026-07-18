@@ -1,9 +1,12 @@
 import Layout from "@/components/Layout";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 import { withSwal } from "react-sweetalert2";
 
 function LocationsPage({ swal }) {
+  const { data: session } = useSession();
+  const canEdit = session?.user?.role === "admin";
   const [locations, setLocations] = useState([]);
   const [editedLocation, setEditedLocation] = useState(null);
   const [formError, setFormError] = useState("");
@@ -111,7 +114,8 @@ function LocationsPage({ swal }) {
 
   return (
     <Layout>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <div className={`grid gap-6 ${canEdit ? "xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]" : ""}`}>
+        {canEdit && (
         <form onSubmit={saveLocation} className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
           <h1 className="mb-4 text-xl font-semibold">{editedLocation ? "Edit location" : "New location"}</h1>
           <div className="grid gap-3">
@@ -141,6 +145,7 @@ function LocationsPage({ swal }) {
             )}
           </div>
         </form>
+        )}
         <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold">Locations</h2>
           <div className="grid gap-3">
@@ -156,14 +161,16 @@ function LocationsPage({ swal }) {
                       <p className="mt-2 text-sm text-gray-500">{location.description}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="btn-default" onClick={() => editLocation(location)}>
-                      Edit
-                    </button>
-                    <button type="button" className="btn-red" onClick={() => deleteLocation(location)}>
-                      Delete
-                    </button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex gap-2">
+                      <button type="button" className="btn-default" onClick={() => editLocation(location)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn-red" onClick={() => deleteLocation(location)}>
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -6,7 +6,11 @@ import NextAuth, {
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
-import { adminEmails, isAdminEmail } from "@/lib/adminAccess";
+import {
+  adminEmails,
+  getUserRole,
+  isAllowedEmail,
+} from "@/lib/adminAccess";
 import clientPromise from "@/lib/mongodb";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -42,7 +46,7 @@ if (devLoginEnabled) {
         const email = credentials?.email?.trim().toLowerCase();
         const password = credentials?.password || "";
 
-        if (!email || !isAdminEmail(email) || password !== devPassword) {
+        if (!email || !isAllowedEmail(email) || password !== devPassword) {
           return null;
         }
 
@@ -59,7 +63,13 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: isProduction ? "database" : "jwt" },
   callbacks: {
     signIn: ({ user }) => {
-      return isAdminEmail(user.email);
+      return isAllowedEmail(user.email);
+    },
+    session: ({ session }) => {
+      if (session.user) {
+        session.user.role = getUserRole(session.user.email) ?? undefined;
+      }
+      return session;
     },
   },
 };
