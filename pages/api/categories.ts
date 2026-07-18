@@ -122,8 +122,9 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
 
     if (req.method === "PUT") {
       const body = (req.body || {}) as Record<string, unknown>;
-      if (!body._id) {
-        return res.status(400).json({ error: "Category id is required." });
+      const categoryId = String(body._id || "");
+      if (!/^[a-f\d]{24}$/i.test(categoryId)) {
+        return res.status(400).json({ error: "Invalid category id." });
       }
 
       const backendPayload = {
@@ -135,7 +136,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         properties: normalizeCategoryProperties(body.properties),
       };
 
-      const response = await fetch(`${targetBaseUrl}/${body._id}`, {
+      const response = await fetch(`${targetBaseUrl}/${encodeURIComponent(categoryId)}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${backendToken}`,
@@ -155,12 +156,13 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     }
 
     if (req.method === "DELETE") {
-      const id = req.query._id;
-      if (!id) {
-        return res.status(400).json({ error: "Category id is required." });
+      const rawId = Array.isArray(req.query._id) ? req.query._id[0] : req.query._id;
+      const id = String(rawId || "");
+      if (!/^[a-f\d]{24}$/i.test(id)) {
+        return res.status(400).json({ error: "Invalid category id." });
       }
 
-      const response = await fetch(`${targetBaseUrl}/${id}`, {
+      const response = await fetch(`${targetBaseUrl}/${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${backendToken}`,

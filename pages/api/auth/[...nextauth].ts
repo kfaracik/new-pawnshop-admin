@@ -10,6 +10,12 @@ import { adminEmails, isAdminEmail } from "@/lib/adminAccess";
 import clientPromise from "@/lib/mongodb";
 
 const isProduction = process.env.NODE_ENV === "production";
+const devPassword = process.env.DEV_ADMIN_PASSWORD;
+// Dev credentials login is opt-in (explicit flag) and never active in production.
+const devLoginEnabled =
+  !isProduction &&
+  process.env.ENABLE_DEV_LOGIN === "true" &&
+  Boolean(devPassword);
 
 const providers: NextAuthOptions["providers"] = [
   GoogleProvider({
@@ -23,7 +29,7 @@ const providers: NextAuthOptions["providers"] = [
   }),
 ];
 
-if (!isProduction) {
+if (devLoginEnabled) {
   providers.push(
     CredentialsProvider({
       id: "dev-login",
@@ -35,7 +41,6 @@ if (!isProduction) {
       authorize: (credentials) => {
         const email = credentials?.email?.trim().toLowerCase();
         const password = credentials?.password || "";
-        const devPassword = process.env.DEV_ADMIN_PASSWORD || "admin";
 
         if (!email || !isAdminEmail(email) || password !== devPassword) {
           return null;

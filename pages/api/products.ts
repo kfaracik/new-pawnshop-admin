@@ -11,6 +11,7 @@ type ProductPayload = {
   quantity?: number;
   availabilityMode?: string;
   availableLocations?: string[];
+  isFeatured?: boolean;
 };
 
 type BackendProduct = Omit<ProductPayload, "category"> & {
@@ -30,6 +31,7 @@ function normalizePayload(body: Record<string, unknown>): ProductPayload {
     quantity,
     availabilityMode,
     availableLocations,
+    isFeatured,
   } = body;
 
   return {
@@ -52,6 +54,7 @@ function normalizePayload(body: Record<string, unknown>): ProductPayload {
     availableLocations: Array.isArray(availableLocations)
       ? availableLocations.map(String).map((item) => item.trim()).filter(Boolean)
       : undefined,
+    isFeatured: typeof isFeatured === "boolean" ? isFeatured : undefined,
   };
 }
 
