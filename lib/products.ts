@@ -37,6 +37,7 @@ export function buildProductPayload({
   properties,
   availabilityMode,
   availableLocations,
+  isFeatured,
 }: {
   title: string;
   description: string;
@@ -47,6 +48,7 @@ export function buildProductPayload({
   properties: Record<string, string>;
   availabilityMode: string;
   availableLocations: string[];
+  isFeatured?: boolean;
 }) {
   return {
     title: title.trim(),
@@ -58,6 +60,7 @@ export function buildProductPayload({
     properties,
     availabilityMode,
     availableLocations,
+    isFeatured: Boolean(isFeatured),
   };
 }
 

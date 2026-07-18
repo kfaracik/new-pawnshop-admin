@@ -20,6 +20,7 @@ export default function ProductForm({
   quantity: existingQuantity,
   availabilityMode: existingAvailabilityMode,
   availableLocations: existingAvailableLocations,
+  isFeatured: existingIsFeatured,
 }) {
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
@@ -36,6 +37,7 @@ export default function ProductForm({
       : String(existingQuantity)
   );
   const [images, setImages] = useState(existingImages || []);
+  const [isFeatured, setIsFeatured] = useState(Boolean(existingIsFeatured));
   const [isOnlineOnly, setIsOnlineOnly] = useState(
     !existingAvailabilityMode || existingAvailabilityMode === "online_only"
   );
@@ -89,6 +91,7 @@ export default function ProductForm({
       properties: productProperties,
       availabilityMode: normalizedAvailabilityMode,
       availableLocations: isOnlineOnly ? [] : availableLocations,
+      isFeatured,
     });
 
     try {
@@ -326,6 +329,19 @@ export default function ProductForm({
         min="0"
         step="1"
       />
+      <label
+        htmlFor="is-featured"
+        className="mb-2 flex cursor-pointer items-center gap-2"
+      >
+        <input
+          id="is-featured"
+          type="checkbox"
+          className="!m-0 h-4 w-4 cursor-pointer"
+          checked={isFeatured}
+          onChange={(ev) => setIsFeatured(ev.target.checked)}
+        />
+        <span>Polecany produkt (sekcja „Polecane okazje”)</span>
+      </label>
       <label htmlFor="availability-selection">Dostępność produktu</label>
       <div className="location-picker">
         <select
