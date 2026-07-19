@@ -42,10 +42,10 @@ function CategoryList({
                 Status: {category.isActive ? "Active" : "Hidden"}
               </p>
               <p className="text-sm text-gray-500">
-                Order: {category.sortOrder ?? index}
+                Kolejność: {category.sortOrder ?? index}
               </p>
               <p className="text-sm text-gray-500">
-                Parent: {category?.parent?.name || "-"}
+                Nadrzędna: {category?.parent?.name || "-"}
               </p>
               {canEdit && (
                 <div className="mt-3 grid grid-cols-2 gap-2">
@@ -54,31 +54,23 @@ function CategoryList({
                     className="btn-default"
                     type="button"
                     disabled={index === 0}
-                  >
-                    Up
-                  </button>
+                  >W górę</button>
                   <button
                     onClick={() => moveCategory(index, "down")}
                     className="btn-default"
                     type="button"
                     disabled={index === categories.length - 1}
-                  >
-                    Down
-                  </button>
+                  >W dół</button>
                   <button
                     onClick={() => editCategory(category)}
                     className="btn-default"
                     type="button"
-                  >
-                    Edit
-                  </button>
+                  >Edytuj</button>
                   <button
                     onClick={() => deleteCategory(category)}
                     className="btn-red"
                     type="button"
-                  >
-                    Delete
-                  </button>
+                  >Usuń</button>
                 </div>
               )}
             </div>
@@ -88,11 +80,11 @@ function CategoryList({
         <table className="basic mt-4">
           <thead>
             <tr>
-              <td>Category name</td>
+              <td>Nazwa kategorii</td>
               <td>Slug</td>
               <td>Status</td>
-              <td>Order</td>
-              <td>Parent category</td>
+              <td>Kolejność</td>
+              <td>Kategoria nadrzędna</td>
               <td></td>
             </tr>
           </thead>
@@ -141,31 +133,23 @@ function CategoryList({
                           className="btn-default mr-1"
                           type="button"
                           disabled={index === 0}
-                        >
-                          Up
-                        </button>
+                        >W górę</button>
                         <button
                           onClick={() => moveCategory(index, "down")}
                           className="btn-default mr-1"
                           type="button"
                           disabled={index === categories.length - 1}
-                        >
-                          Down
-                        </button>
+                        >W dół</button>
                         <button
                           onClick={() => editCategory(category)}
                           className="btn-default mr-1"
                           type="button"
-                        >
-                          Edit
-                        </button>
+                        >Edytuj</button>
                         <button
                           onClick={() => deleteCategory(category)}
                           className="btn-red"
                           type="button"
-                        >
-                          Delete
-                        </button>
+                        >Usuń</button>
                       </>
                     )}
                   </td>

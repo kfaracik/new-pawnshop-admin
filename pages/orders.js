@@ -20,8 +20,16 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: "refunded", label: "Zwrócone" },
 ];
 
+const FULFILLMENT_STATUS_OPTIONS = [
+  { value: "unfulfilled", label: "Nowe" },
+  { value: "processing", label: "W przygotowaniu" },
+  { value: "shipped", label: "Wysłane" },
+  { value: "delivered", label: "Dostarczone" },
+  { value: "canceled", label: "Anulowane" },
+];
+
 const formatMoney = (value) =>
-  typeof value === "number" ? `${value.toFixed(2)} PLN` : "-";
+  typeof value === "number" ? `${value.toFixed(2)} zł` : "-";
 
 const getOptionLabel = (options, value, fallback = "-") =>
   options.find((option) => option.value === value)?.label || value || fallback;
@@ -57,7 +65,9 @@ export default function OrdersPage() {
       })
       .catch((err) => {
         setError(
-          err?.response?.data?.error || err?.message || "Failed to load orders."
+          err?.response?.data?.error ||
+            err?.message ||
+            "Nie udało się załadować zamówień."
         );
       })
       .finally(() => {
@@ -75,10 +85,12 @@ export default function OrdersPage() {
       setOrders((current) =>
         current.map((order) => (order._id === orderId ? response.data : order))
       );
-      setNotice("Order updated.");
+      setNotice("Zaktualizowano zamówienie.");
     } catch (err) {
       setError(
-        err?.response?.data?.error || err?.message || "Failed to update order."
+        err?.response?.data?.error ||
+          err?.message ||
+          "Nie udało się zaktualizować zamówienia."
       );
     } finally {
       setUpdatingOrderId("");
@@ -91,10 +103,10 @@ export default function OrdersPage() {
 
   return (
     <Layout>
-      <h1>Orders</h1>
+      <h1 className="mb-4 text-xl font-bold text-gray-800">Zamówienia</h1>
       {error && <p className="text-red-600 mb-2">{error}</p>}
       {notice && <p className="text-green-700 mb-2">{notice}</p>}
-      {isLoading && <p>Loading orders...</p>}
+      {isLoading && <p>Ładowanie zamówień...</p>}
       <div className="grid gap-3 md:hidden">
         {orders.length > 0 &&
           orders.map((order) => {
@@ -176,13 +188,30 @@ export default function OrdersPage() {
                     ))}
                   </select>
                 </label>
+                <label className="grid gap-1">
+                  <span className="font-medium text-gray-700">Realizacja</span>
+                  <select
+                    className="rounded-md border border-gray-300 p-2"
+                    value={order.fulfillmentStatus || "unfulfilled"}
+                    disabled={isUpdating || !canEdit}
+                    onChange={(event) =>
+                      updateOrder(order._id, { fulfillmentStatus: event.target.value })
+                    }
+                  >
+                    {FULFILLMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
             </article>
             );
           })}
         {orders.length === 0 && !isLoading && (
           <div className="rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-500 shadow-sm">
-            No orders found.
+            Brak zamówień.
           </div>
         )}
       </div>
@@ -190,14 +219,15 @@ export default function OrdersPage() {
         <table className="basic">
           <thead>
             <tr>
-              <th>Date</th>
+              <th>Data</th>
               <th>Status zamówienia</th>
               <th>Status płatności</th>
-              <th>Recipient</th>
-              <th>Delivery</th>
-              <th>Payment method</th>
-              <th>Products</th>
-              <th>Total</th>
+              <th>Realizacja</th>
+              <th>Odbiorca</th>
+              <th>Dostawa</th>
+              <th>Metoda płatności</th>
+              <th>Produkty</th>
+              <th>Suma</th>
             </tr>
           </thead>
           <tbody>
@@ -241,6 +271,22 @@ export default function OrdersPage() {
                     </select>
                   </td>
                   <td>
+                    <select
+                      className="rounded-md border border-gray-300 p-2 text-sm"
+                      value={order.fulfillmentStatus || "unfulfilled"}
+                      disabled={isUpdating || !canEdit}
+                      onChange={(event) =>
+                        updateOrder(order._id, { fulfillmentStatus: event.target.value })
+                      }
+                    >
+                      {FULFILLMENT_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
                     {order.customer?.name} {order.customer?.email}
                     <br />
                     {order.customer?.city} {order.customer?.postalCode} {order.customer?.country}
@@ -277,7 +323,7 @@ export default function OrdersPage() {
               })}
             {orders.length === 0 && !isLoading && (
               <tr>
-                <td colSpan={8}>No orders found.</td>
+                <td colSpan={9}>Brak zamówień.</td>
               </tr>
             )}
           </tbody>

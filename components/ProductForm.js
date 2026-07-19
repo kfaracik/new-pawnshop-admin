@@ -192,16 +192,16 @@ export default function ProductForm({
 
   return (
     <form onSubmit={saveProduct} aria-describedby={formError ? "product-form-error" : undefined}>
-      <label htmlFor={titleId}>Product name</label>
+      <label htmlFor={titleId}>Nazwa produktu</label>
       <input
         id={titleId}
         type="text"
-        placeholder="product name"
+        placeholder="nazwa produktu"
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
         required
       />
-      <label htmlFor={categoryId}>Category</label>
+      <label htmlFor={categoryId}>Kategoria</label>
       <select id={categoryId} value={category} onChange={(ev) => setCategory(ev.target.value)}>
         <option value="">Uncategorized</option>
         {categories.length > 0 &&
@@ -297,33 +297,33 @@ export default function ProductForm({
               d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
             />
           </svg>
-          <div>Add image</div>
+          <div>Dodaj zdjęcie</div>
           <input id={photosId} type="file" onChange={uploadImages} className="hidden" multiple />
         </label>
       </div>
       <label htmlFor={descriptionId}>Description</label>
       <textarea
         id={descriptionId}
-        placeholder="description"
+        placeholder="opis"
         value={description}
         onChange={(ev) => setDescription(ev.target.value)}
       />
-      <label htmlFor={priceId}>Price (in PLN)</label>
+      <label htmlFor={priceId}>Cena (zł)</label>
       <input
         id={priceId}
         type="number"
-        placeholder="price"
+        placeholder="cena"
         value={price}
         onChange={(ev) => setPrice(ev.target.value)}
         min="0.01"
         step="0.01"
         required
       />
-      <label htmlFor={quantityId}>Quantity (stock limit)</label>
+      <label htmlFor={quantityId}>Ilość (limit stanu)</label>
       <input
         id={quantityId}
         type="number"
-        placeholder="quantity"
+        placeholder="ilość"
         value={quantity}
         onChange={(ev) => setQuantity(ev.target.value)}
         min="0"
@@ -351,7 +351,7 @@ export default function ProductForm({
           value={isOnlineOnly ? ["online_only"] : availableLocations}
           onChange={handleAvailabilitySelectionChange}
         >
-          <option value="online_only">Online only</option>
+          <option value="online_only">Tylko online</option>
           {locations.map((location) => (
             <option key={location._id} value={String(location._id)}>
               {location.name}
@@ -362,13 +362,13 @@ export default function ProductForm({
         </select>
         {locations.length === 0 && (
           <p className="location-hint">
-            Nie masz jeszcze dodanych lokalizacji. Uzupełnij je najpierw w sekcji Locations.
+            Nie masz jeszcze dodanych lokalizacji. Uzupełnij je najpierw w sekcji Lokalizacje.
           </p>
         )}
       </div>
       {formError && <p id="product-form-error" className="form-error" role="alert">{formError}</p>}
       <button type="submit" className="btn-primary" disabled={isSaving}>
-        {isSaving ? "Saving..." : "Save"}
+        {isSaving ? "Zapisywanie..." : "Zapisz"}
       </button>
       <style jsx>{`
         .form-error {

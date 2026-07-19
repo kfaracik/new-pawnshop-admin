@@ -55,7 +55,7 @@ function Categories({ swal }) {
     ev.preventDefault();
     setFormError("");
     if (!name.trim()) {
-      setFormError("Category name is required.");
+      setFormError("Nazwa kategorii jest wymagana.");
       return;
     }
 
@@ -117,8 +117,8 @@ function Categories({ swal }) {
         title: "Are you sure?",
         text: `Do you want to delete ${category.name}?`,
         showCancelButton: true,
-        cancelButtonText: "Cancel",
-        confirmButtonText: "Yes, Delete!",
+        cancelButtonText: "Anuluj",
+        confirmButtonText: "Tak, usuń!",
         confirmButtonColor: "#d55",
         reverseButtons: true,
       })
@@ -224,9 +224,7 @@ function Categories({ swal }) {
               viewBox="0 0 16 16"
             >
               <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-            </svg>
-            Add new category
-          </button>
+            </svg>Dodaj kategorię</button>
         </div>
       )}
       {(showForm || editedCategory) && (

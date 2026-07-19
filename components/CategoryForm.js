@@ -33,14 +33,14 @@ function CategoryForm({
         <div className="grid gap-2 md:grid-cols-3">
           <input
             type="text"
-            placeholder="Category name"
+            placeholder="Nazwa kategorii"
             onChange={(ev) => setName(ev.target.value)}
             value={name}
             required
           />
           <input
             type="text"
-            placeholder="Category slug (optional)"
+            placeholder="Slug kategorii (opcjonalnie)"
             onChange={(ev) => setSlug(ev.target.value)}
             value={slug}
           />
@@ -48,7 +48,7 @@ function CategoryForm({
             onChange={(ev) => setParentCategory(ev.target.value)}
             value={parentCategory}
           >
-            <option value="">No parent category</option>
+            <option value="">Brak kategorii nadrzędnej</option>
             {categories.length > 0 &&
               categories.map((category) => (
                 <option
@@ -71,7 +71,7 @@ function CategoryForm({
             Active
           </label>
           <div className="flex items-center gap-2">
-            <span>Sort order</span>
+            <span>Kolejność</span>
             <input
               type="number"
               value={sortOrder}
@@ -86,9 +86,7 @@ function CategoryForm({
             onClick={addProperty}
             type="button"
             className="btn-default text-sm mb-2"
-          >
-            Add new property
-          </button>
+          >Dodaj właściwość</button>
           {properties.length > 0 &&
             properties.map((property, index) => (
               <div
@@ -102,7 +100,7 @@ function CategoryForm({
                   onChange={(ev) =>
                     handlePropertyNameChange(index, ev.target.value)
                   }
-                  placeholder="property name (example: color)"
+                  placeholder="nazwa właściwości (np. kolor)"
                 />
                 <input
                   type="text"
@@ -111,7 +109,7 @@ function CategoryForm({
                     handlePropertyValuesChange(index, ev.target.value)
                   }
                   value={property.values}
-                  placeholder="values, comma separated"
+                  placeholder="wartości, oddzielone przecinkami"
                 />
                 <button
                   onClick={() => removeProperty(index)}
@@ -129,12 +127,10 @@ function CategoryForm({
               type="button"
               onClick={resetForm}
               className="btn-default"
-            >
-              Cancel
-            </button>
+            >Anuluj</button>
           )}
           <button type="submit" className="btn-primary py-1" disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? "Zapisywanie..." : "Zapisz"}
           </button>
         </div>
       </form>

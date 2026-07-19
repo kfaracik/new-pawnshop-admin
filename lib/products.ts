@@ -17,11 +17,11 @@ type ValidateProductInput = {
 
 export function validateProductInput({ title, price }: ValidateProductInput) {
   if (!title.trim()) {
-    return "Product name is required.";
+    return "Nazwa produktu jest wymagana.";
   }
 
   if (price === "" || Number(price) <= 0 || Number.isNaN(Number(price))) {
-    return "Price must be a number greater than 0.";
+    return "Cena musi być liczbą większą od 0.";
   }
 
   return "";

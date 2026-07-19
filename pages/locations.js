@@ -98,11 +98,11 @@ function LocationsPage({ swal }) {
   function deleteLocation(location) {
     swal
       .fire({
-        title: "Delete location?",
+        title: "Usunąć lokalizację?",
         text: `Do you want to delete ${location.name}?`,
         showCancelButton: true,
-        confirmButtonText: "Delete",
-        cancelButtonText: "Cancel",
+        confirmButtonText: "Usuń",
+        cancelButtonText: "Anuluj",
         confirmButtonColor: "#d55",
       })
       .then(async (result) => {
@@ -117,17 +117,17 @@ function LocationsPage({ swal }) {
       <div className={`grid gap-6 ${canEdit ? "xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]" : ""}`}>
         {canEdit && (
         <form onSubmit={saveLocation} className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-          <h1 className="mb-4 text-xl font-semibold">{editedLocation ? "Edit location" : "New location"}</h1>
+          <h1 className="mb-4 text-xl font-semibold">{editedLocation ? "Edytuj lokalizację" : "Nowa lokalizacja"}</h1>
           <div className="grid gap-3">
-            <input placeholder="Location name" value={form.name} onChange={(e) => updateField("name", e.target.value)} />
-            <input placeholder="City" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
-            <input placeholder="Address line 1" value={form.addressLine1} onChange={(e) => updateField("addressLine1", e.target.value)} />
-            <input placeholder="Address line 2" value={form.addressLine2} onChange={(e) => updateField("addressLine2", e.target.value)} />
-            <input placeholder="Postal code" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} />
-            <input placeholder="Phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
-            <input placeholder="Email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
-            <textarea placeholder="Description / notes" value={form.description} onChange={(e) => updateField("description", e.target.value)} />
-            <input type="number" placeholder="Sort order" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
+            <input placeholder="Nazwa lokalizacji" value={form.name} onChange={(e) => updateField("name", e.target.value)} />
+            <input placeholder="Miasto" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+            <input placeholder="Adres (linia 1)" value={form.addressLine1} onChange={(e) => updateField("addressLine1", e.target.value)} />
+            <input placeholder="Adres (linia 2)" value={form.addressLine2} onChange={(e) => updateField("addressLine2", e.target.value)} />
+            <input placeholder="Kod pocztowy" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} />
+            <input placeholder="Telefon" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
+            <input placeholder="E-mail" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+            <textarea placeholder="Opis / notatki" value={form.description} onChange={(e) => updateField("description", e.target.value)} />
+            <input type="number" placeholder="Kolejność" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" checked={form.isActive} onChange={(e) => updateField("isActive", e.target.checked)} />
               Active
@@ -136,18 +136,16 @@ function LocationsPage({ swal }) {
           {formError && <p className="mt-3 text-sm text-red-600">{formError}</p>}
           <div className="mt-4 flex gap-2">
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? "Zapisywanie..." : "Zapisz"}
             </button>
             {editedLocation && (
-              <button type="button" className="btn-default" onClick={resetForm}>
-                Cancel
-              </button>
+              <button type="button" className="btn-default" onClick={resetForm}>Anuluj</button>
             )}
           </div>
         </form>
         )}
         <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Locations</h2>
+          <h2 className="mb-4 text-lg font-semibold">Lokalizacje</h2>
           <div className="grid gap-3">
             {locations.map((location) => (
               <div key={location._id} className="rounded-lg border border-gray-200 p-4">
@@ -166,9 +164,7 @@ function LocationsPage({ swal }) {
                       <button type="button" className="btn-default" onClick={() => editLocation(location)}>
                         Edit
                       </button>
-                      <button type="button" className="btn-red" onClick={() => deleteLocation(location)}>
-                        Delete
-                      </button>
+                      <button type="button" className="btn-red" onClick={() => deleteLocation(location)}>Usuń</button>
                     </div>
                   )}
                 </div>
