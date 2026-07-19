@@ -16,6 +16,23 @@ const needsFulfillment = (order) => {
   return isPaidOrder(order) && (status === "unfulfilled" || status === "processing");
 };
 
+const orderUnits = (order) =>
+  (order?.products || []).reduce(
+    (sum, product) => sum + (Number(product?.quantity) || 0),
+    0
+  );
+
+const orderRevenue = (order) => {
+  const value = Number(order?.grandTotal ?? order?.totalAmount);
+  return Number.isFinite(value) ? value : 0;
+};
+
+const formatMoney = (value) =>
+  `${(Number(value) || 0).toLocaleString("pl-PL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} zł`;
+
 export default function Home() {
   const { data: session } = useSession();
   const [orders, setOrders] = useState([]);
@@ -39,41 +56,60 @@ export default function Home() {
   }, []);
 
   const stats = useMemo(() => {
-    const toFulfill = orders.filter(needsFulfillment);
-    const awaitingPayment = orders.filter(
-      (order) => (order?.orderStatus || "pending_payment") === "pending_payment"
-    );
-    const shipped = orders.filter(
-      (order) => order?.fulfillmentStatus === "shipped"
-    );
+    const paidOrders = orders.filter(isPaidOrder);
+    const revenue = paidOrders.reduce((sum, order) => sum + orderRevenue(order), 0);
+    const unitsSold = paidOrders.reduce((sum, order) => sum + orderUnits(order), 0);
+    const byFulfillment = (status) =>
+      orders.filter((order) => (order?.fulfillmentStatus || "unfulfilled") === status)
+        .length;
+
     return {
       total: orders.length,
-      toFulfill: toFulfill.length,
-      awaitingPayment: awaitingPayment.length,
-      shipped: shipped.length,
+      paidCount: paidOrders.length,
+      revenue,
+      unitsSold,
+      avgOrder: paidOrders.length ? revenue / paidOrders.length : 0,
+      toFulfill: orders.filter(needsFulfillment).length,
+      awaitingPayment: orders.filter(
+        (order) => (order?.orderStatus || "pending_payment") === "pending_payment"
+      ).length,
+      processing: byFulfillment("processing"),
+      shipped: byFulfillment("shipped"),
+      delivered: byFulfillment("delivered"),
     };
   }, [orders]);
 
-  const tiles = [
-    { label: "Wszystkie zamówienia", value: stats.total, tone: "gray" },
+  const salesTiles = [
+    { label: "Przychód (opłacone)", value: formatMoney(stats.revenue), accent: true },
+    { label: "Sprzedane sztuki", value: stats.unitsSold },
+    { label: "Opłacone zamówienia", value: stats.paidCount },
+    { label: "Średnia wartość zamówienia", value: formatMoney(stats.avgOrder) },
+  ];
+
+  const fulfillmentTiles = [
     { label: "Do realizacji", value: stats.toFulfill, tone: "amber" },
-    { label: "Oczekują na płatność", value: stats.awaitingPayment, tone: "gray" },
-    { label: "Wysłane", value: stats.shipped, tone: "green" },
+    { label: "W przygotowaniu", value: stats.processing, tone: "gray" },
+    { label: "W drodze", value: stats.shipped, tone: "blue" },
+    { label: "Dostarczone", value: stats.delivered, tone: "green" },
   ];
 
   const toneClass = {
     gray: "border-gray-200 bg-white",
     amber: "border-amber-200 bg-amber-50",
     green: "border-emerald-200 bg-emerald-50",
+    blue: "border-sky-200 bg-sky-50",
   };
 
   return (
     <Layout>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="m-0 text-xl font-bold text-gray-800">
-          Witaj, {session?.user?.name || session?.user?.email}
-        </h1>
-        <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700">
+        <div>
+          <h1 className="m-0 text-2xl font-bold text-gray-900">Pulpit</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Witaj, {session?.user?.name || session?.user?.email} — oto podsumowanie sklepu.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200">
           {session?.user?.image ? (
             <Image
               src={session.user.image}
@@ -105,22 +141,12 @@ export default function Home() {
           <span className="text-sm">
             <strong className="block text-base">
               Masz {stats.toFulfill}{" "}
-              {stats.toFulfill === 1
-                ? "zamówienie"
-                : stats.toFulfill < 5
-                  ? "zamówienia"
-                  : "zamówień"}{" "}
+              {stats.toFulfill === 1 ? "zamówienie" : stats.toFulfill < 5 ? "zamówienia" : "zamówień"}{" "}
               do realizacji
             </strong>
-            Opłacone i czekają na przygotowanie/wysyłkę — kliknij, aby przejść do zamówień.
+            Opłacone, czekają na przygotowanie/wysyłkę — kliknij, aby przejść do zamówień.
           </span>
         </Link>
-      )}
-
-      {!isLoading && !loadError && stats.toFulfill === 0 && (
-        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Wszystko na bieżąco — brak opłaconych zamówień oczekujących na realizację.
-        </div>
       )}
 
       {loadError && (
@@ -130,24 +156,51 @@ export default function Home() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {tiles.map((tile) => (
-          <div
-            key={tile.label}
-            className={`rounded-xl border p-4 shadow-sm ${toneClass[tile.tone]}`}
-          >
-            <div className="text-3xl font-bold text-gray-800">
-              {isLoading ? "…" : tile.value}
+      <section className="mb-6">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          Zestawienie sprzedaży
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {salesTiles.map((tile) => (
+            <div
+              key={tile.label}
+              className={`rounded-xl border p-4 shadow-sm ${
+                tile.accent ? "border-gold bg-gold-soft" : "border-gray-200 bg-white"
+              }`}
+            >
+              <div className={`text-2xl font-bold ${tile.accent ? "text-gold-dark" : "text-gray-900"}`}>
+                {isLoading ? "…" : tile.value}
+              </div>
+              <div className="mt-1 text-sm text-gray-600">{tile.label}</div>
             </div>
-            <div className="mt-1 text-sm text-gray-600">{tile.label}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
 
-      <div className="mt-6">
-        <Link href="/orders" className="text-sm font-medium text-primary hover:underline">
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          Realizacja zamówień
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {fulfillmentTiles.map((tile) => (
+            <div key={tile.label} className={`rounded-xl border p-4 shadow-sm ${toneClass[tile.tone]}`}>
+              <div className="text-2xl font-bold text-gray-900">
+                {isLoading ? "…" : tile.value}
+              </div>
+              <div className="mt-1 text-sm text-gray-600">{tile.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="mt-6 flex flex-wrap gap-4 text-sm">
+        <Link href="/orders" className="font-medium text-gold-dark hover:underline">
           Przejdź do zamówień →
         </Link>
+        <Link href="/products" className="font-medium text-gold-dark hover:underline">
+          Zarządzaj produktami →
+        </Link>
+        <span className="text-gray-400">Wszystkich zamówień: {isLoading ? "…" : stats.total}</span>
       </div>
     </Layout>
   );

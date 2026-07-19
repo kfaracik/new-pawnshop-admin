@@ -61,7 +61,7 @@ export default function Layout({ children }) {
       </header>
       <div className="flex flex-grow">
         <Nav show={showNav} onClose={() => setShowNav(false)} />
-        <main id="main-content" className="flex-grow p-3 sm:p-4">
+        <main id="main-content" className="min-w-0 flex-grow p-4 sm:p-6">
           {isEmployee && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5 shrink-0">
