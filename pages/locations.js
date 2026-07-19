@@ -1,8 +1,11 @@
 import Layout from "@/components/Layout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { withSwal } from "react-sweetalert2";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 10;
 
 function LocationsPage({ swal }) {
   const { data: session } = useSession();
@@ -112,6 +115,15 @@ function LocationsPage({ swal }) {
       });
   }
 
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(locations.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+
+  const pagedLocations = useMemo(
+    () => locations.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [locations, safePage]
+  );
+
   return (
     <Layout>
       <div className={`grid gap-6 ${canEdit ? "xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]" : ""}`}>
@@ -147,7 +159,7 @@ function LocationsPage({ swal }) {
         <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold">Lokalizacje</h2>
           <div className="grid gap-3">
-            {locations.map((location) => (
+            {pagedLocations.map((location) => (
               <div key={location._id} className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -172,6 +184,7 @@ function LocationsPage({ swal }) {
             ))}
             {locations.length === 0 && <p className="text-sm text-gray-500">No locations yet.</p>}
           </div>
+          <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
         </div>
       </div>
     </Layout>

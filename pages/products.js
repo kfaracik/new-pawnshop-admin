@@ -3,6 +3,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 12;
 
 const AVAILABILITY_LABELS = {
   online_only: "Online",
@@ -139,6 +142,16 @@ export default function Products() {
     inStockOnly,
     locationMap,
   ]);
+
+  const [page, setPage] = useState(1);
+
+  const pageCount = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+
+  const pagedProducts = useMemo(
+    () => filteredProducts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filteredProducts, safePage]
+  );
 
   const hasActiveFilters =
     search ||
@@ -284,10 +297,19 @@ export default function Products() {
             </div>
           ))}
         {!isLoading &&
-          filteredProducts.map((product) => (
+          pagedProducts.map((product) => (
             <div key={product._id} className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
               <div className="mb-2 flex items-start justify-between gap-3">
-                <h2 className="text-base font-semibold text-gray-800">{product.title}</h2>
+                {canEdit ? (
+                  <Link
+                    href={"/products/edit/" + product._id}
+                    className="text-base font-semibold text-gray-800 hover:text-primary hover:underline"
+                  >
+                    {product.title}
+                  </Link>
+                ) : (
+                  <h2 className="text-base font-semibold text-gray-800">{product.title}</h2>
+                )}
                 <strong className="whitespace-nowrap text-sm text-gray-800">
                   {formatPrice(Number(product.price))}
                 </strong>
@@ -346,11 +368,22 @@ export default function Products() {
                 </tr>
               ))}
             {!isLoading &&
-              filteredProducts.map((product) => {
+              pagedProducts.map((product) => {
                 const quantity = getQuantity(product);
                 return (
                   <tr key={product._id}>
-                    <td className="font-medium text-gray-800">{product.title}</td>
+                    <td className="font-medium text-gray-800">
+                      {canEdit ? (
+                        <Link
+                          href={"/products/edit/" + product._id}
+                          className="font-medium text-gray-800 hover:text-primary hover:underline"
+                        >
+                          {product.title}
+                        </Link>
+                      ) : (
+                        product.title
+                      )}
+                    </td>
                     <td className="whitespace-nowrap">{formatPrice(Number(product.price))}</td>
                     <td>
                       <span
@@ -395,6 +428,10 @@ export default function Products() {
           </tbody>
         </table>
       </div>
+
+      {!isLoading && filteredProducts.length > 0 && (
+        <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+      )}
     </Layout>
   );
 }

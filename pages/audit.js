@@ -1,7 +1,10 @@
 import Layout from "@/components/Layout";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 15;
 
 const OUTCOME_BADGE = {
   success: "bg-green-100 text-green-800",
@@ -52,6 +55,7 @@ function AuditContent() {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -74,6 +78,14 @@ function AuditContent() {
       load();
     }
   }, [status, role, load]);
+
+  const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+
+  const pagedEntries = useMemo(
+    () => entries.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [entries, safePage]
+  );
 
   if (status === "authenticated" && role !== "admin") {
     return (
@@ -132,7 +144,7 @@ function AuditContent() {
                 </td>
               </tr>
             ) : (
-              entries.map((entry) => (
+              pagedEntries.map((entry) => (
                 <tr key={entry._id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-4 py-3 text-gray-600">
                     {formatDate(entry.at)}
@@ -164,6 +176,10 @@ function AuditContent() {
           </tbody>
         </table>
       </div>
+
+      {!isLoading && entries.length > 0 && (
+        <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+      )}
     </div>
   );
 }

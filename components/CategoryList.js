@@ -1,3 +1,8 @@
+import { useMemo, useState } from "react";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 12;
+
 function CategoryList({
   isLoading,
   categories,
@@ -6,6 +11,16 @@ function CategoryList({
   moveCategory,
   canEdit = true,
 }) {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(categories.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+
+  const start = (safePage - 1) * PAGE_SIZE;
+  const pagedCategories = useMemo(
+    () => categories.slice(start, start + PAGE_SIZE),
+    [categories, start]
+  );
+
   return (
     <>
       <div className="mt-4 grid gap-3 md:hidden">
@@ -29,7 +44,9 @@ function CategoryList({
             </div>
           ))}
         {categories.length > 0 &&
-          categories.map((category, index) => (
+          pagedCategories.map((category, localIndex) => {
+            const index = start + localIndex;
+            return (
             <div
               key={category._id}
               className="rounded-md border border-gray-200 bg-white p-3 shadow-sm"
@@ -74,7 +91,8 @@ function CategoryList({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
       </div>
       <div className="hidden md:block">
         <table className="basic mt-4">
@@ -118,7 +136,9 @@ function CategoryList({
                 </tr>
               ))}
             {categories.length > 0 &&
-              categories.map((category, index) => (
+              pagedCategories.map((category, localIndex) => {
+                const index = start + localIndex;
+                return (
                 <tr key={category._id}>
                   <td>{category.name}</td>
                   <td>{category.slug || "-"}</td>
@@ -154,10 +174,15 @@ function CategoryList({
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
           </tbody>
         </table>
       </div>
+
+      {!isLoading && categories.length > 0 && (
+        <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+      )}
     </>
   );
 }

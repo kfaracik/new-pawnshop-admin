@@ -1,7 +1,10 @@
 import Layout from "@/components/Layout";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 15;
 
 const ROLE_LABEL = { admin: "Administrator", employee: "Pracownik (wgląd)" };
 
@@ -9,6 +12,7 @@ function TeamContent() {
   const { data: session, status } = useSession();
   const role = session?.user?.role;
   const [members, setMembers] = useState([]);
+  const [page, setPage] = useState(1);
   const [currentUser, setCurrentUser] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -79,6 +83,14 @@ function TeamContent() {
       setError(requestError?.response?.data?.error || "Nie udało się usunąć konta.");
     }
   };
+
+  const pageCount = Math.max(1, Math.ceil(members.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+
+  const pagedMembers = useMemo(
+    () => members.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [members, safePage]
+  );
 
   if (status === "authenticated" && role !== "admin") {
     return (
@@ -162,7 +174,7 @@ function TeamContent() {
                 </td>
               </tr>
             ) : (
-              members.map((member) => {
+              pagedMembers.map((member) => {
                 const isConfig = member.source === "config";
                 const isSelf = member.email === currentUser;
                 return (
@@ -223,6 +235,10 @@ function TeamContent() {
           </tbody>
         </table>
       </div>
+
+      {!isLoading && members.length > 0 && (
+        <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+      )}
     </div>
   );
 }
