@@ -35,7 +35,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: { Authorization: `Bearer ${backendToken}` },
     });
 
-    const payload = (await response.json()) as unknown;
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch (_error) {
+      payload = text;
+    }
+
     if (!response.ok) {
       return res.status(response.status).json({
         error: getErrorMessage(payload, "Failed to load order stats from backend."),
@@ -43,12 +50,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(200).json(payload);
-  } catch (error) {
-    return res.status(502).json({
+  } catch (_error) {
+    return res.status(503).json({
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to connect to backend order stats endpoint.",
+        "Backend jest chwilowo niedostępny (prawdopodobnie się wybudza). Odśwież za chwilę.",
     });
   }
 }

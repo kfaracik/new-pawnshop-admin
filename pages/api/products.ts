@@ -2,6 +2,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authorize } from "@/lib/authz";
 import { auditOnFinish } from "@/lib/audit";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "8mb",
+    },
+  },
+};
+
 type ProductPayload = {
   title?: string;
   description?: string;
